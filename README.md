@@ -1,4 +1,4 @@
-<img width="1200" height="630" alt="og-preview" src="https://github.com/user-attachments/assets/9def7574-a474-46b8-b7a3-3fb0458623fe" />
+<img width="1200" height="630" alt="lux_banner_premium" src="https://github.com/user-attachments/assets/e18b74e4-7f63-4a33-bfd5-d4829d7e25f4" />
 
 # LuxEditor
 
