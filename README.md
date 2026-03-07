@@ -1,4 +1,5 @@
-<img width="895" height="471" alt="image" src="https://github.com/user-attachments/assets/18ac1c6b-4e06-43de-be2b-ec4d53dc14aa" />
+<img width="1200" height="630" alt="og-preview" src="https://github.com/user-attachments/assets/9def7574-a474-46b8-b7a3-3fb0458623fe" />
+
 # LuxEditor
 
 LuxEditor is a **modern browser-based photo editor** that allows users to quickly edit images directly in their browser.
