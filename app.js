@@ -193,6 +193,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Disable export button until image loaded
   $('exportBtn').disabled = true;
+
+  hideAppLoader();
 });
 
 // ═══════════════════════════════════════════════════════════
@@ -2203,6 +2205,16 @@ function showToast(msg, duration = 2600) {
 
 function showLoading(show) {
   $('loadingOverlay').classList.toggle('hidden', !show);
+}
+
+function hideAppLoader() {
+  const el = document.getElementById('appLoader');
+  if (!el) return;
+  el.classList.add('app-loader-done');
+  setTimeout(() => {
+    el.classList.add('app-loader-hiding');
+    setTimeout(() => el.remove(), 500);
+  }, 160);
 }
 
 // ═══════════════════════════════════════════════════════════

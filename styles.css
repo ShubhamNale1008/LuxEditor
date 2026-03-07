@@ -146,6 +146,89 @@ html, body {
   color: var(--t3); font-size: 12px; letter-spacing: .04em;
 }
 
+/* ═══════════════════ APP STARTUP LOADER ═══════════════════ */
+
+@keyframes appLoaderMarkPulse {
+  0%,100% { opacity:.55; transform:scale(1) rotate(0deg); }
+  50%      { opacity:1;   transform:scale(1.12) rotate(15deg); }
+}
+@keyframes appLoaderBarFill {
+  from { width:0% }
+  to   { width:76% }
+}
+@keyframes appLoaderFadeIn {
+  from { opacity:0; transform:translateY(10px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+.app-loader {
+  position: fixed; inset: 0; z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg0);
+  opacity: 1;
+  transition: opacity .48s cubic-bezier(0.4,0,0.2,1);
+  pointer-events: all;
+}
+.app-loader.app-loader-hiding {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.app-loader-inner {
+  display: flex; flex-direction: column; align-items: center;
+  animation: appLoaderFadeIn .45s cubic-bezier(0.4,0,0.2,1) both;
+  user-select: none;
+}
+
+.app-loader-logo {
+  display: flex; align-items: center; gap: 11px;
+  margin-bottom: 32px;
+}
+
+.app-loader-mark {
+  font-size: 30px;
+  color: var(--acc);
+  display: inline-block;
+  animation: appLoaderMarkPulse 2.2s ease-in-out infinite;
+  filter: drop-shadow(0 0 14px rgba(245,166,35,.65));
+  line-height: 1;
+}
+
+.app-loader-name {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -.025em;
+  color: var(--t1);
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+.app-loader-bar-track {
+  width: 160px; height: 2px;
+  background: var(--border);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.app-loader-bar {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--acc), var(--acc2));
+  border-radius: 99px;
+  animation: appLoaderBarFill .75s cubic-bezier(0.4,0,0.2,1) forwards;
+  transition: width .18s cubic-bezier(0.4,0,0.2,1);
+  box-shadow: 0 0 8px rgba(245,166,35,.5);
+}
+.app-loader.app-loader-done .app-loader-bar {
+  width: 100%;
+}
+
+.app-loader-hint {
+  margin-top: 18px;
+  color: var(--t3);
+  font-size: 11px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
 /* ═══════════════════ TOAST ═══════════════════ */
 
 .toast-container {
