@@ -1549,6 +1549,31 @@ button, a, label, .tool-btn, .icon-btn, .chip, .fmt-btn,
   transition: border-color var(--t);
 }
 .text-tool-select:focus { outline: none; border-color: var(--acc); }
+.text-font-hover-preview {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border: 1px solid rgba(245,166,35,0.3);
+  border-radius: var(--r1);
+  background: linear-gradient(170deg, rgba(245,166,35,0.08), rgba(255,255,255,0.02));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+}
+.text-font-hover-preview.hidden { display: none; }
+.text-font-hover-preview-label {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--t3);
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+.text-font-hover-preview-sample {
+  min-height: 30px;
+  line-height: 1.2;
+  color: var(--t1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .text-align-row {
   display: flex; gap: 6px; margin-top: 8px;
 }

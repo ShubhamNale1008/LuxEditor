@@ -225,17 +225,98 @@
           <input type="range" class="slider" id="textOpacity" min="10" max="100" value="100"/>
           <span class="sv" id="textOpacityVal">100%</span>
         </div>
+        <p class="opt-title" style="margin-top:10px">Blend</p>
+        <select class="text-tool-select" id="textBlendMode">
+          <option value="source-over">Normal</option>
+          <option value="overlay">Overlay</option>
+          <option value="soft-light">Soft Light</option>
+          <option value="hard-light">Hard Light</option>
+          <option value="screen">Screen</option>
+          <option value="multiply">Multiply</option>
+        </select>
+        <div class="srow" style="margin-top:8px">
+          <span class="opt-title" style="margin:0;min-width:52px">Blend Op</span>
+          <input type="range" class="slider" id="textBlendOpacity" min="0" max="100" value="70"/>
+          <span class="sv" id="textBlendOpacityVal">70%</span>
+        </div>
         <p class="opt-title">Color</p>
         <input type="color" class="c-input" id="textColor" value="#ffffff"/>
+        <p class="opt-title" style="margin-top:10px">Color Style</p>
+        <select class="text-tool-select" id="textColorMode">
+          <option value="preset" selected>Preset (Font Default)</option>
+          <option value="solid">Solid</option>
+          <option value="linear">Linear Gradient</option>
+          <option value="radial">Radial Gradient</option>
+        </select>
+        <div class="srow" style="margin-top:8px" id="textColor2Row">
+          <span class="opt-title" style="margin:0;min-width:52px">Color 2</span>
+          <input type="color" class="c-input" id="textColor2" value="#7bdcff"/>
+          <span class="sv">Grad</span>
+        </div>
+        <div class="srow" style="margin-top:8px" id="textGradientAngleRow">
+          <span class="opt-title" style="margin:0;min-width:52px">Angle</span>
+          <input type="range" class="slider" id="textGradientAngle" min="0" max="360" value="45"/>
+          <span class="sv" id="textGradientAngleVal">45°</span>
+        </div>
         <p class="opt-title" style="margin-top:10px">Font</p>
         <select class="text-tool-select" id="textFont">
-          <option value="sans-serif">Sans-serif</option>
-          <option value="serif">Serif</option>
-          <option value="monospace">Monospace</option>
-          <option value="cursive">Cursive</option>
-          <option value="Georgia, serif">Georgia</option>
-          <option value="'Courier New', monospace">Courier New</option>
-          <option value="Impact, sans-serif">Impact</option>
+          <optgroup label="Simple Fonts">
+            <option value="sans-serif||none">Sans-serif</option>
+            <option value="serif||none">Serif</option>
+            <option value="monospace||none">Monospace</option>
+            <option value="cursive||none">Cursive</option>
+            <option value="Georgia, serif||none">Georgia</option>
+            <option value="'Courier New', monospace||none">Courier New</option>
+            <option value="Impact, sans-serif||none">Impact</option>
+            <option value="'Avenir Next', Avenir, 'Segoe UI', sans-serif||none">Avenir Next</option>
+            <option value="'Futura', 'Trebuchet MS', sans-serif||none">Futura</option>
+            <option value="'Didot', 'Times New Roman', serif||none">Didot</option>
+            <option value="'Bodoni MT', Didot, serif||none">Bodoni</option>
+            <option value="'Playfair Display', Georgia, serif||none">Playfair Display</option>
+            <option value="'Garamond', 'Palatino Linotype', serif||none">Garamond</option>
+            <option value="'Palatino Linotype', 'Book Antiqua', serif||none">Palatino</option>
+            <option value="'Optima', 'Segoe UI', sans-serif||none">Optima</option>
+            <option value="'Gill Sans', 'Trebuchet MS', sans-serif||none">Gill Sans</option>
+            <option value="'Franklin Gothic Medium', 'Arial Narrow', sans-serif||none">Franklin Gothic</option>
+            <option value="'Montserrat', 'Segoe UI', sans-serif||none">Montserrat</option>
+            <option value="'Poppins', 'Segoe UI', sans-serif||none">Poppins</option>
+            <option value="'Raleway', 'Segoe UI', sans-serif||none">Raleway</option>
+            <option value="'Bebas Neue', Impact, sans-serif||none">Bebas Neue</option>
+          </optgroup>
+
+          <optgroup label="Fonts With Effects">
+            <option value="'Avenir Next', Avenir, 'Segoe UI', sans-serif||shadow">Avenir Shadow Pro</option>
+            <option value="'Bebas Neue', Impact, sans-serif||outline">Title Outline</option>
+            <option value="'Montserrat', 'Segoe UI', sans-serif||neon">Neon Glow</option>
+            <option value="'Playfair Display', Georgia, serif||softglow">Soft Glow Serif</option>
+            <option value="'Didot', 'Times New Roman', serif||gold">Golden Luxe</option>
+            <option value="'Optima', 'Segoe UI', sans-serif||frost">Frosted Glass</option>
+            <option value="'Franklin Gothic Medium', 'Arial Narrow', sans-serif||cinema">Cinematic Title</option>
+            <option value="'Copperplate', 'Times New Roman', serif||silver">Photoshop Chrome</option>
+            <option value="'Copperplate', 'Times New Roman', serif||platinum">Platinum Editorial</option>
+            <option value="'Avenir Next', Avenir, 'Segoe UI', sans-serif||rosegold">Rose Gold Luxe</option>
+            <option value="'Futura', 'Trebuchet MS', sans-serif||holo">Holographic Neon</option>
+            <option value="'Bebas Neue', Impact, sans-serif||bevel">Bevel Poster</option>
+            <option value="'Franklin Gothic Medium', 'Arial Narrow', sans-serif||glitch">Glitch Title</option>
+            <option value="'Montserrat', 'Segoe UI', sans-serif||duotone">Duotone Gradient</option>
+            <option value="'Trajan Pro', 'Times New Roman', serif||cinema">DaVinci Film Title</option>
+            <option value="'Avenir Next Condensed', 'Avenir Next', 'Segoe UI', sans-serif||glasspro">DaVinci Frosted LT</option>
+            <option value="'Bodoni MT', Didot, serif||ember">Ember Luxe</option>
+            <option value="'Gill Sans', 'Trebuchet MS', sans-serif||glasspro">Glass Premium</option>
+          </optgroup>
+
+          <optgroup label="Premium">
+            <option value="'Trajan Pro', 'Times New Roman', serif||platinum">Imperial Platinum</option>
+            <option value="'Cinzel', 'Times New Roman', serif||gold">Royal Gold Serif</option>
+            <option value="'Montserrat Black', 'Montserrat', sans-serif||glitch">Cyber Glitch Black</option>
+            <option value="'Poppins', 'Segoe UI', sans-serif||glasspro">Crystal Glass Pro</option>
+            <option value="'Avenir Next Demi Bold', 'Avenir Next', sans-serif||rosegold">Rose Gold Signature</option>
+            <option value="'Bebas Neue', Impact, sans-serif||ember">Inferno Poster</option>
+            <option value="'Playfair Display', Georgia, serif||silver">Silver Editorial Luxe</option>
+            <option value="'Futura', 'Trebuchet MS', sans-serif||duotone">Duotone Fashion</option>
+            <option value="'Franklin Gothic Heavy', 'Arial Narrow', sans-serif||bevel">3D Bevel Heavy</option>
+            <option value="'Avenir Next Condensed', 'Avenir Next', sans-serif||holo">Holo Future Condensed</option>
+          </optgroup>
         </select>
         <div class="text-align-row">
           <button class="text-align-btn active" data-align="left" title="Align Left">
@@ -247,6 +328,10 @@
           <button class="text-align-btn" data-align="right" title="Align Right">
             <svg viewBox="0 0 16 16"><path d="M6 12.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm-4-3a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11a.5.5 0 0 1-.5-.5zm4-3a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm-4-3a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11a.5.5 0 0 1-.5-.5z"/></svg>
           </button>
+        </div>
+        <div class="reset-row" style="margin-top:10px">
+          <button class="btn-ghost w-full" id="editLastTextBtn" style="margin-bottom:8px">Edit Last Text</button>
+          <button class="btn-ghost w-full" id="deleteLastTextBtn">Delete Last Text</button>
         </div>
       </div>
 

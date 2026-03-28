@@ -647,7 +647,7 @@ function updateZoomDisplay() {
 //  HISTORY  (undo / redo)
 // ═══════════════════════════════════════════════════════════
 
-function saveHistory() {
+function saveHistory(meta) {
   if (!state.image) return;
 
   const snap = {
@@ -658,6 +658,7 @@ function saveHistory() {
     canvasH:     mainCanvas.height,
     flipH:       state.flipH,
     flipV:       state.flipV,
+    meta:        meta || null,
   };
 
   // Trim forward history
@@ -1646,14 +1647,706 @@ function endBrush() {
 
 // ── Text overlay drag state ──
 let _tobDragging = false, _tobOffX = 0, _tobOffY = 0;
+let _textFontPreviewInitialized = false;
+let _textLiveUiRaf = 0;
+let _lastTextPreviewSig = '';
+let _textFontPreviewHoverTimer = 0;
+
+const TEXT_EFFECTS = {
+  none:      { id: 'none' },
+  shadow:    { id: 'shadow' },
+  outline:   { id: 'outline' },
+  neon:      { id: 'neon' },
+  softglow:  { id: 'softglow' },
+  gold:      { id: 'gold' },
+  frost:     { id: 'frost' },
+  cinema:    { id: 'cinema' },
+  silver:    { id: 'silver' },
+  rosegold:  { id: 'rosegold' },
+  holo:      { id: 'holo' },
+  bevel:     { id: 'bevel' },
+  glitch:    { id: 'glitch' },
+  duotone:   { id: 'duotone' },
+  ember:     { id: 'ember' },
+  glasspro:  { id: 'glasspro' },
+  platinum:  { id: 'platinum' },
+};
+
+function parseTextStyleSelection(rawValue) {
+  const value = String(rawValue || '').trim();
+  if (!value) return { fontFamily: 'sans-serif', effectId: 'none' };
+  const split = value.split('||');
+  const fontFamily = (split[0] || 'sans-serif').trim();
+  const effectIdRaw = (split[1] || 'none').trim().toLowerCase();
+  const effectId = TEXT_EFFECTS[effectIdRaw] ? effectIdRaw : 'none';
+  return { fontFamily, effectId };
+}
+
+function _clearTextFxStyles(el) {
+  el.style.textShadow = 'none';
+  el.style.webkitTextStroke = '0px transparent';
+  el.style.background = 'none';
+  el.style.backgroundClip = 'border-box';
+  el.style.webkitBackgroundClip = 'border-box';
+  el.style.webkitTextFillColor = '';
+  el.style.filter = 'none';
+}
+
+function _applyOverlayTextEffect(el, effectId, color, sizePx) {
+  _clearTextFxStyles(el);
+  const glowA = Math.max(1, Math.round(sizePx * 0.18));
+  const glowB = Math.max(2, Math.round(sizePx * 0.4));
+  const glowC = Math.max(4, Math.round(sizePx * 0.7));
+  const strokePx = Math.max(1, Math.round(sizePx * 0.06));
+
+  switch (effectId) {
+    case 'shadow':
+      el.style.textShadow = `0 ${Math.max(1, Math.round(sizePx * 0.1))}px ${Math.max(3, Math.round(sizePx * 0.28))}px rgba(0,0,0,0.55)`;
+      break;
+    case 'outline':
+      el.style.webkitTextStroke = `${strokePx}px rgba(0,0,0,0.8)`;
+      break;
+    case 'neon':
+      el.style.textShadow =
+        `0 0 ${glowA}px ${color}, 0 0 ${glowB}px ${color}, 0 0 ${glowC}px rgba(255,255,255,0.85)`;
+      break;
+    case 'softglow':
+      el.style.textShadow =
+        `0 0 ${Math.max(2, Math.round(sizePx * 0.25))}px rgba(255,255,255,0.65), 0 ${Math.max(1, Math.round(sizePx * 0.04))}px ${Math.max(3, Math.round(sizePx * 0.35))}px rgba(0,0,0,0.35)`;
+      break;
+    case 'gold':
+      el.style.background = 'linear-gradient(180deg, #fff6bf 0%, #ffd35f 34%, #f6a814 64%, #c77a00 100%)';
+      el.style.backgroundClip = 'text';
+      el.style.webkitBackgroundClip = 'text';
+      el.style.webkitTextFillColor = 'transparent';
+      el.style.textShadow = `0 ${Math.max(1, Math.round(sizePx * 0.08))}px ${Math.max(2, Math.round(sizePx * 0.2))}px rgba(0,0,0,0.35)`;
+      break;
+    case 'frost':
+      el.style.background = 'linear-gradient(180deg, #ffffff 0%, #d8ebff 45%, #7db8ff 100%)';
+      el.style.backgroundClip = 'text';
+      el.style.webkitBackgroundClip = 'text';
+      el.style.webkitTextFillColor = 'transparent';
+      el.style.textShadow = `0 0 ${Math.max(2, Math.round(sizePx * 0.22))}px rgba(167, 219, 255, 0.7)`;
+      break;
+    case 'cinema':
+      el.style.webkitTextStroke = `${strokePx}px rgba(0,0,0,0.9)`;
+      el.style.textShadow =
+        `0 ${Math.max(1, Math.round(sizePx * 0.08))}px ${Math.max(3, Math.round(sizePx * 0.18))}px rgba(0,0,0,0.75), 0 0 ${Math.max(3, Math.round(sizePx * 0.3))}px rgba(255,255,255,0.2)`;
+      break;
+    case 'silver':
+      el.style.background = 'linear-gradient(180deg, #ffffff 0%, #e8edf2 28%, #b5c0cb 56%, #7a8794 100%)';
+      el.style.backgroundClip = 'text';
+      el.style.webkitBackgroundClip = 'text';
+      el.style.webkitTextFillColor = 'transparent';
+      el.style.textShadow = `0 ${Math.max(1, Math.round(sizePx * 0.05))}px ${Math.max(2, Math.round(sizePx * 0.16))}px rgba(0,0,0,0.32)`;
+      break;
+    case 'rosegold':
+      el.style.background = 'linear-gradient(180deg, #ffe7dd 0%, #f9b9a0 36%, #dc7f62 68%, #9f4f3f 100%)';
+      el.style.backgroundClip = 'text';
+      el.style.webkitBackgroundClip = 'text';
+      el.style.webkitTextFillColor = 'transparent';
+      el.style.textShadow = `0 ${Math.max(1, Math.round(sizePx * 0.07))}px ${Math.max(2, Math.round(sizePx * 0.2))}px rgba(70,20,10,0.35)`;
+      break;
+    case 'holo':
+      el.style.background = 'linear-gradient(120deg, #7ff7ff 0%, #7fa8ff 18%, #b68cff 35%, #ff8fd4 55%, #9cf0c0 72%, #fff59b 100%)';
+      el.style.backgroundClip = 'text';
+      el.style.webkitBackgroundClip = 'text';
+      el.style.webkitTextFillColor = 'transparent';
+      el.style.textShadow = `0 0 ${Math.max(3, Math.round(sizePx * 0.25))}px rgba(140,255,255,0.45)`;
+      break;
+    case 'bevel':
+      el.style.webkitTextStroke = `${Math.max(1, Math.round(sizePx * 0.045))}px rgba(0,0,0,0.5)`;
+      el.style.textShadow =
+        `0 -1px 0 rgba(255,255,255,0.65), 0 1px 0 rgba(0,0,0,0.45), 0 ${Math.max(1, Math.round(sizePx * 0.05))}px ${Math.max(2, Math.round(sizePx * 0.16))}px rgba(0,0,0,0.35)`;
+      break;
+    case 'glitch':
+      el.style.textShadow =
+        `${Math.max(1, Math.round(sizePx * 0.03))}px 0 0 rgba(255,0,80,0.8), -${Math.max(1, Math.round(sizePx * 0.03))}px 0 0 rgba(0,220,255,0.8), 0 ${Math.max(1, Math.round(sizePx * 0.06))}px ${Math.max(2, Math.round(sizePx * 0.2))}px rgba(0,0,0,0.45)`;
+      break;
+    case 'duotone':
+      el.style.background = 'linear-gradient(180deg, #7bdcff 0%, #6a7bff 48%, #ff5ebc 100%)';
+      el.style.backgroundClip = 'text';
+      el.style.webkitBackgroundClip = 'text';
+      el.style.webkitTextFillColor = 'transparent';
+      el.style.textShadow = `0 0 ${Math.max(2, Math.round(sizePx * 0.16))}px rgba(76,126,255,0.45)`;
+      break;
+    case 'ember':
+      el.style.background = 'linear-gradient(180deg, #fff3b0 0%, #ffca5e 30%, #ff7d28 62%, #b63200 100%)';
+      el.style.backgroundClip = 'text';
+      el.style.webkitBackgroundClip = 'text';
+      el.style.webkitTextFillColor = 'transparent';
+      el.style.textShadow = `0 0 ${Math.max(3, Math.round(sizePx * 0.24))}px rgba(255,126,44,0.55), 0 ${Math.max(1, Math.round(sizePx * 0.05))}px ${Math.max(2, Math.round(sizePx * 0.18))}px rgba(0,0,0,0.45)`;
+      break;
+    case 'glasspro':
+      el.style.background = 'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(198,230,255,0.92) 45%, rgba(120,186,255,0.88) 100%)';
+      el.style.backgroundClip = 'text';
+      el.style.webkitBackgroundClip = 'text';
+      el.style.webkitTextFillColor = 'transparent';
+      el.style.webkitTextStroke = `${Math.max(1, Math.round(sizePx * 0.03))}px rgba(255,255,255,0.55)`;
+      el.style.textShadow = `0 0 ${Math.max(3, Math.round(sizePx * 0.24))}px rgba(153,214,255,0.55), 0 ${Math.max(1, Math.round(sizePx * 0.04))}px ${Math.max(2, Math.round(sizePx * 0.18))}px rgba(0,0,0,0.28)`;
+      break;
+    case 'platinum':
+      el.style.background = 'linear-gradient(180deg, #ffffff 0%, #f5f7fb 22%, #d4dbe5 52%, #919eac 78%, #eff3f9 100%)';
+      el.style.backgroundClip = 'text';
+      el.style.webkitBackgroundClip = 'text';
+      el.style.webkitTextFillColor = 'transparent';
+      el.style.textShadow = `0 ${Math.max(1, Math.round(sizePx * 0.06))}px ${Math.max(2, Math.round(sizePx * 0.18))}px rgba(0,0,0,0.28)`;
+      break;
+  }
+}
+
+function _applyOverlayTextEffectPreview(el, effectId, color, sizePx) {
+  _clearTextFxStyles(el);
+  const strokePx = Math.max(1, Math.round(sizePx * 0.04));
+  switch (effectId) {
+    case 'outline':
+    case 'cinema':
+    case 'bevel':
+      el.style.webkitTextStroke = `${strokePx}px rgba(0,0,0,0.7)`;
+      break;
+    case 'neon':
+    case 'holo':
+    case 'duotone':
+    case 'ember':
+    case 'glasspro':
+      el.style.textShadow = `0 0 ${Math.max(2, Math.round(sizePx * 0.22))}px ${color}`;
+      break;
+    case 'shadow':
+    case 'softglow':
+    case 'frost':
+    case 'gold':
+    case 'silver':
+    case 'rosegold':
+    case 'platinum':
+      el.style.textShadow = `0 ${Math.max(1, Math.round(sizePx * 0.06))}px ${Math.max(2, Math.round(sizePx * 0.18))}px rgba(0,0,0,0.35)`;
+      break;
+    case 'glitch':
+      el.style.textShadow =
+        `${Math.max(1, Math.round(sizePx * 0.02))}px 0 0 rgba(255,0,80,0.65), -${Math.max(1, Math.round(sizePx * 0.02))}px 0 0 rgba(0,220,255,0.65)`;
+      break;
+  }
+}
+
+function _setOverlayPos(clientX, clientY) {
+  const box = $('textOverlayBox');
+  const ar  = $('canvasArea').getBoundingClientRect();
+  box.style.left = (clientX - ar.left) + 'px';
+  box.style.top  = (clientY - ar.top)  + 'px';
+  _clampOverlayToCanvasArea();
+}
+
+function _clampOverlayToCanvasArea() {
+  const box = $('textOverlayBox');
+  if (!box || box.classList.contains('hidden')) return;
+  const area = $('canvasArea').getBoundingClientRect();
+  const br = box.getBoundingClientRect();
+
+  const minLeft = 2;
+  const minTop  = 2;
+  const maxLeft = Math.max(minLeft, area.width  - br.width  - 2);
+  const maxTop  = Math.max(minTop,  area.height - br.height - 2);
+
+  const rawLeft = parseFloat(box.style.left) || 0;
+  const rawTop  = parseFloat(box.style.top)  || 0;
+  const left = clamp(rawLeft, minLeft, maxLeft);
+  const top  = clamp(rawTop,  minTop,  maxTop);
+
+  box.style.left = left + 'px';
+  box.style.top  = top  + 'px';
+}
+
+function _resetCtxTextFx(ctx) {
+  ctx.shadowColor = 'transparent';
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
+  ctx.lineWidth = 1;
+}
+
+function _applyCanvasTextEffect(ctx, effectId, color, sizePx, x, y, lineH, align, line, innerWidthPx, colorSettings) {
+  _resetCtxTextFx(ctx);
+  const glowA = Math.max(1, Math.round(sizePx * 0.18));
+  const glowB = Math.max(2, Math.round(sizePx * 0.4));
+  const glowC = Math.max(4, Math.round(sizePx * 0.7));
+  const strokePx = Math.max(1, Math.round(sizePx * 0.06));
+  const gradStartX = align === 'center' ? x - innerWidthPx / 2 : (align === 'right' ? x - innerWidthPx : x);
+  const baseFill = _resolveCanvasTextFill(
+    ctx,
+    colorSettings || { mode: 'solid', color1: color, color2: color, angle: 45 },
+    gradStartX,
+    y,
+    innerWidthPx,
+    lineH
+  );
+  const useCustomOnPremium = _FIXED_GRADIENT_EFFECTS.has(effectId) && _isCustomGradientMode(colorSettings);
+
+  switch (effectId) {
+    case 'shadow':
+      ctx.fillStyle = baseFill;
+      ctx.shadowColor = 'rgba(0,0,0,0.55)';
+      ctx.shadowBlur = Math.max(3, Math.round(sizePx * 0.28));
+      ctx.shadowOffsetY = Math.max(1, Math.round(sizePx * 0.1));
+      ctx.fillText(line, x, y);
+      break;
+    case 'outline':
+      ctx.lineWidth = strokePx;
+      ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+      ctx.fillStyle = baseFill;
+      ctx.strokeText(line, x, y);
+      ctx.fillText(line, x, y);
+      break;
+    case 'neon':
+      ctx.fillStyle = baseFill;
+      ctx.shadowColor = color;
+      ctx.shadowBlur = glowC;
+      ctx.fillText(line, x, y);
+      _resetCtxTextFx(ctx);
+      ctx.shadowColor = 'rgba(255,255,255,0.85)';
+      ctx.shadowBlur = glowA;
+      ctx.fillText(line, x, y);
+      break;
+    case 'softglow':
+      ctx.fillStyle = baseFill;
+      ctx.shadowColor = 'rgba(255,255,255,0.65)';
+      ctx.shadowBlur = Math.max(2, Math.round(sizePx * 0.25));
+      ctx.fillText(line, x, y);
+      _resetCtxTextFx(ctx);
+      ctx.shadowColor = 'rgba(0,0,0,0.35)';
+      ctx.shadowBlur = Math.max(3, Math.round(sizePx * 0.35));
+      ctx.shadowOffsetY = Math.max(1, Math.round(sizePx * 0.04));
+      ctx.fillText(line, x, y);
+      break;
+    case 'gold': {
+      if (useCustomOnPremium) {
+        ctx.fillStyle = baseFill;
+      } else {
+        const g = ctx.createLinearGradient(gradStartX, y, gradStartX + innerWidthPx, y + lineH);
+        g.addColorStop(0, '#fff6bf');
+        g.addColorStop(0.34, '#ffd35f');
+        g.addColorStop(0.64, '#f6a814');
+        g.addColorStop(1, '#c77a00');
+        ctx.fillStyle = g;
+      }
+      ctx.shadowColor = 'rgba(0,0,0,0.35)';
+      ctx.shadowBlur = Math.max(2, Math.round(sizePx * 0.2));
+      ctx.shadowOffsetY = Math.max(1, Math.round(sizePx * 0.08));
+      ctx.fillText(line, x, y);
+      break;
+    }
+    case 'frost': {
+      if (useCustomOnPremium) {
+        ctx.fillStyle = baseFill;
+      } else {
+        const g = ctx.createLinearGradient(gradStartX, y, gradStartX + innerWidthPx, y + lineH);
+        g.addColorStop(0, '#ffffff');
+        g.addColorStop(0.45, '#d8ebff');
+        g.addColorStop(1, '#7db8ff');
+        ctx.fillStyle = g;
+      }
+      ctx.shadowColor = 'rgba(167, 219, 255, 0.7)';
+      ctx.shadowBlur = Math.max(2, Math.round(sizePx * 0.22));
+      ctx.fillText(line, x, y);
+      break;
+    }
+    case 'cinema':
+      ctx.lineWidth = strokePx;
+      ctx.strokeStyle = 'rgba(0,0,0,0.9)';
+      ctx.fillStyle = baseFill;
+      ctx.shadowColor = 'rgba(0,0,0,0.75)';
+      ctx.shadowBlur = Math.max(3, Math.round(sizePx * 0.18));
+      ctx.shadowOffsetY = Math.max(1, Math.round(sizePx * 0.08));
+      ctx.strokeText(line, x, y);
+      ctx.fillText(line, x, y);
+      break;
+    case 'silver': {
+      if (useCustomOnPremium) {
+        ctx.fillStyle = baseFill;
+      } else {
+        const g = ctx.createLinearGradient(gradStartX, y, gradStartX + innerWidthPx, y + lineH);
+        g.addColorStop(0, '#ffffff');
+        g.addColorStop(0.28, '#e8edf2');
+        g.addColorStop(0.56, '#b5c0cb');
+        g.addColorStop(1, '#7a8794');
+        ctx.fillStyle = g;
+      }
+      ctx.shadowColor = 'rgba(0,0,0,0.32)';
+      ctx.shadowBlur = Math.max(2, Math.round(sizePx * 0.16));
+      ctx.shadowOffsetY = Math.max(1, Math.round(sizePx * 0.05));
+      ctx.fillText(line, x, y);
+      break;
+    }
+    case 'rosegold': {
+      if (useCustomOnPremium) {
+        ctx.fillStyle = baseFill;
+      } else {
+        const g = ctx.createLinearGradient(gradStartX, y, gradStartX + innerWidthPx, y + lineH);
+        g.addColorStop(0, '#ffe7dd');
+        g.addColorStop(0.36, '#f9b9a0');
+        g.addColorStop(0.68, '#dc7f62');
+        g.addColorStop(1, '#9f4f3f');
+        ctx.fillStyle = g;
+      }
+      ctx.shadowColor = 'rgba(70,20,10,0.35)';
+      ctx.shadowBlur = Math.max(2, Math.round(sizePx * 0.2));
+      ctx.shadowOffsetY = Math.max(1, Math.round(sizePx * 0.07));
+      ctx.fillText(line, x, y);
+      break;
+    }
+    case 'holo': {
+      if (useCustomOnPremium) {
+        ctx.fillStyle = baseFill;
+      } else {
+        const g = ctx.createLinearGradient(gradStartX, y, gradStartX + innerWidthPx, y + lineH);
+        g.addColorStop(0, '#7ff7ff');
+        g.addColorStop(0.18, '#7fa8ff');
+        g.addColorStop(0.35, '#b68cff');
+        g.addColorStop(0.55, '#ff8fd4');
+        g.addColorStop(0.72, '#9cf0c0');
+        g.addColorStop(1, '#fff59b');
+        ctx.fillStyle = g;
+      }
+      ctx.shadowColor = 'rgba(140,255,255,0.45)';
+      ctx.shadowBlur = Math.max(3, Math.round(sizePx * 0.25));
+      ctx.fillText(line, x, y);
+      break;
+    }
+    case 'bevel':
+      ctx.lineWidth = Math.max(1, Math.round(sizePx * 0.045));
+      ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillStyle = baseFill;
+      ctx.shadowColor = 'rgba(0,0,0,0.35)';
+      ctx.shadowBlur = Math.max(2, Math.round(sizePx * 0.16));
+      ctx.shadowOffsetY = Math.max(1, Math.round(sizePx * 0.05));
+      ctx.strokeText(line, x, y);
+      ctx.fillText(line, x, y);
+      _resetCtxTextFx(ctx);
+      ctx.fillStyle = 'rgba(255,255,255,0.52)';
+      ctx.fillText(line, x, y - Math.max(1, Math.round(sizePx * 0.02)));
+      break;
+    case 'glitch':
+      ctx.fillStyle = 'rgba(255,0,80,0.75)';
+      ctx.fillText(line, x + Math.max(1, Math.round(sizePx * 0.03)), y);
+      ctx.fillStyle = 'rgba(0,220,255,0.75)';
+      ctx.fillText(line, x - Math.max(1, Math.round(sizePx * 0.03)), y);
+      ctx.fillStyle = baseFill;
+      ctx.shadowColor = 'rgba(0,0,0,0.45)';
+      ctx.shadowBlur = Math.max(2, Math.round(sizePx * 0.2));
+      ctx.shadowOffsetY = Math.max(1, Math.round(sizePx * 0.06));
+      ctx.fillText(line, x, y);
+      break;
+    case 'duotone': {
+      if (useCustomOnPremium) {
+        ctx.fillStyle = baseFill;
+      } else {
+        const g = ctx.createLinearGradient(gradStartX, y, gradStartX + innerWidthPx, y + lineH);
+        g.addColorStop(0, '#7bdcff');
+        g.addColorStop(0.48, '#6a7bff');
+        g.addColorStop(1, '#ff5ebc');
+        ctx.fillStyle = g;
+      }
+      ctx.shadowColor = 'rgba(76,126,255,0.45)';
+      ctx.shadowBlur = Math.max(2, Math.round(sizePx * 0.16));
+      ctx.fillText(line, x, y);
+      break;
+    }
+    case 'ember': {
+      if (useCustomOnPremium) {
+        ctx.fillStyle = baseFill;
+      } else {
+        const g = ctx.createLinearGradient(gradStartX, y, gradStartX + innerWidthPx, y + lineH);
+        g.addColorStop(0, '#fff3b0');
+        g.addColorStop(0.3, '#ffca5e');
+        g.addColorStop(0.62, '#ff7d28');
+        g.addColorStop(1, '#b63200');
+        ctx.fillStyle = g;
+      }
+      ctx.shadowColor = 'rgba(255,126,44,0.55)';
+      ctx.shadowBlur = Math.max(3, Math.round(sizePx * 0.24));
+      ctx.fillText(line, x, y);
+      break;
+    }
+    case 'glasspro': {
+      if (useCustomOnPremium) {
+        ctx.fillStyle = baseFill;
+      } else {
+        const g = ctx.createLinearGradient(gradStartX, y, gradStartX + innerWidthPx, y + lineH);
+        g.addColorStop(0, 'rgba(255,255,255,0.95)');
+        g.addColorStop(0.45, 'rgba(198,230,255,0.92)');
+        g.addColorStop(1, 'rgba(120,186,255,0.88)');
+        ctx.fillStyle = g;
+      }
+      ctx.lineWidth = Math.max(1, Math.round(sizePx * 0.03));
+      ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+      ctx.shadowColor = 'rgba(153,214,255,0.55)';
+      ctx.shadowBlur = Math.max(3, Math.round(sizePx * 0.24));
+      ctx.strokeText(line, x, y);
+      ctx.fillText(line, x, y);
+      break;
+    }
+    case 'platinum': {
+      if (useCustomOnPremium) {
+        ctx.fillStyle = baseFill;
+      } else {
+        const g = ctx.createLinearGradient(gradStartX, y, gradStartX + innerWidthPx, y + lineH);
+        g.addColorStop(0, '#ffffff');
+        g.addColorStop(0.22, '#f5f7fb');
+        g.addColorStop(0.52, '#d4dbe5');
+        g.addColorStop(0.78, '#919eac');
+        g.addColorStop(1, '#eff3f9');
+        ctx.fillStyle = g;
+      }
+      ctx.shadowColor = 'rgba(0,0,0,0.28)';
+      ctx.shadowBlur = Math.max(2, Math.round(sizePx * 0.18));
+      ctx.shadowOffsetY = Math.max(1, Math.round(sizePx * 0.06));
+      ctx.fillText(line, x, y);
+      break;
+    }
+    default:
+      ctx.fillStyle = baseFill;
+      ctx.fillText(line, x, y);
+      break;
+  }
+
+  _resetCtxTextFx(ctx);
+}
+
+function _getTextBlendSettings() {
+  const modeEl = $('textBlendMode');
+  const opEl = $('textBlendOpacity');
+  const mode = modeEl ? modeEl.value : 'source-over';
+  const opVal = opEl ? (parseInt(opEl.value, 10) || 0) / 100 : 1;
+  return {
+    blendMode: mode || 'source-over',
+    blendOpacity: clamp(opVal, 0, 1),
+  };
+}
+
+const _FIXED_GRADIENT_EFFECTS = new Set(['gold', 'frost', 'silver', 'rosegold', 'holo', 'duotone', 'ember', 'glasspro', 'platinum']);
+
+function _isCustomGradientMode(colorSettings) {
+  if (!colorSettings) return false;
+  return colorSettings.mode === 'linear' || colorSettings.mode === 'radial';
+}
+
+function _getTextColorSettings() {
+  const modeEl = $('textColorMode');
+  const c1El = $('textColor');
+  const c2El = $('textColor2');
+  const angleEl = $('textGradientAngle');
+  return {
+    mode: modeEl ? modeEl.value : 'preset',
+    color1: c1El ? c1El.value : '#ffffff',
+    color2: c2El ? c2El.value : '#7bdcff',
+    angle: angleEl ? (parseInt(angleEl.value, 10) || 0) : 45,
+  };
+}
+
+function _buildLinearGradient(ctx, x, y, w, h, angleDeg, c1, c2) {
+  const rad = ((angleDeg || 0) * Math.PI) / 180;
+  const cx = x + w / 2;
+  const cy = y + h / 2;
+  const dx = Math.cos(rad) * (w / 2);
+  const dy = Math.sin(rad) * (h / 2);
+  const g = ctx.createLinearGradient(cx - dx, cy - dy, cx + dx, cy + dy);
+  g.addColorStop(0, c1);
+  g.addColorStop(1, c2);
+  return g;
+}
+
+function _resolveCanvasTextFill(ctx, colorSettings, x, y, w, h) {
+  if (!colorSettings || colorSettings.mode === 'solid') return colorSettings ? colorSettings.color1 : '#ffffff';
+  if (colorSettings.mode === 'radial') {
+    const cx = x + w / 2;
+    const cy = y + h / 2;
+    const r0 = Math.max(1, Math.min(w, h) * 0.08);
+    const r1 = Math.max(w, h) * 0.75;
+    const g = ctx.createRadialGradient(cx, cy, r0, cx, cy, r1);
+    g.addColorStop(0, colorSettings.color1);
+    g.addColorStop(1, colorSettings.color2);
+    return g;
+  }
+  return _buildLinearGradient(ctx, x, y, w, h, colorSettings.angle, colorSettings.color1, colorSettings.color2);
+}
+
+function _applyOverlayTextFill(el, colorSettings, sizePx, effectId) {
+  if (!colorSettings) return;
+
+  // Keep original premium style gradients until user explicitly switches to gradient mode.
+  if (_FIXED_GRADIENT_EFFECTS.has(effectId) && !_isCustomGradientMode(colorSettings)) return;
+
+  if (colorSettings.mode === 'preset') {
+    el.style.background = 'none';
+    el.style.backgroundClip = 'border-box';
+    el.style.webkitBackgroundClip = 'border-box';
+    el.style.webkitTextFillColor = '';
+    el.style.color = colorSettings.color1;
+    return;
+  }
+
+  if (colorSettings.mode === 'solid') {
+    el.style.background = 'none';
+    el.style.backgroundClip = 'border-box';
+    el.style.webkitBackgroundClip = 'border-box';
+    el.style.webkitTextFillColor = '';
+    el.style.color = colorSettings.color1;
+    return;
+  }
+
+  const gradient = colorSettings.mode === 'radial'
+    ? `radial-gradient(circle at 50% 50%, ${colorSettings.color1} 0%, ${colorSettings.color2} 100%)`
+    : `linear-gradient(${colorSettings.angle}deg, ${colorSettings.color1} 0%, ${colorSettings.color2} 100%)`;
+
+  el.style.color = colorSettings.color1;
+  el.style.background = gradient;
+  el.style.backgroundClip = 'text';
+  el.style.webkitBackgroundClip = 'text';
+  el.style.webkitTextFillColor = 'transparent';
+  el.style.textShadow = (el.style.textShadow && el.style.textShadow !== 'none')
+    ? el.style.textShadow
+    : `0 0 ${Math.max(1, Math.round(sizePx * 0.08))}px rgba(0,0,0,0.25)`;
+}
+
+function _updateTextFontHoverPreview() {
+  const box = $('textFontPreview');
+  const sample = $('textFontPreviewSample');
+  if (!box || !sample) return;
+  if (box.classList.contains('hidden')) return;
+
+  const sel = $('textFont');
+  const selected = sel && sel.options[sel.selectedIndex];
+  const styleSel = parseTextStyleSelection(sel ? sel.value : 'sans-serif||none');
+  const colorSettings = _getTextColorSettings();
+  const color = colorSettings.color1;
+  const sizePx = 24;
+
+  const sig = [
+    styleSel.fontFamily,
+    styleSel.effectId,
+    colorSettings.mode,
+    colorSettings.color1,
+    colorSettings.color2,
+    colorSettings.angle,
+    'preview-lite',
+  ].join('|');
+  if (sig === _lastTextPreviewSig) return;
+  _lastTextPreviewSig = sig;
+
+  sample.style.fontFamily = styleSel.fontFamily;
+  sample.style.fontSize = sizePx + 'px';
+  sample.style.color = color;
+  // Keep preview cheap: avoid expensive blend/compositing and heavy shadow stacks.
+  sample.style.mixBlendMode = 'normal';
+  sample.style.opacity = '1';
+  _applyOverlayTextEffectPreview(sample, styleSel.effectId, color, sizePx);
+  _applyOverlayTextFill(sample, colorSettings, sizePx, styleSel.effectId);
+
+  const label = $('textFontPreviewLabel');
+  if (label) label.textContent = selected ? selected.textContent : 'Font preview';
+}
+
+function initTextFontPreview() {
+  if (_textFontPreviewInitialized) return;
+  const sel = $('textFont');
+  if (!sel) return;
+
+  // Display each list item in its own typeface where the browser allows option styling.
+  Array.from(sel.options).forEach(opt => {
+    const styleSel = parseTextStyleSelection(opt.value);
+    opt.style.fontFamily = styleSel.fontFamily;
+  });
+
+  let preview = $('textFontPreview');
+  if (!preview) {
+    preview = document.createElement('div');
+    preview.id = 'textFontPreview';
+    preview.className = 'text-font-hover-preview hidden';
+    preview.innerHTML =
+      '<div class="text-font-hover-preview-label" id="textFontPreviewLabel">Font preview</div>' +
+      '<div class="text-font-hover-preview-sample" id="textFontPreviewSample">LUX CINEMA TITLE</div>';
+    sel.insertAdjacentElement('afterend', preview);
+  }
+
+  const show = () => {
+    clearTimeout(_textFontPreviewHoverTimer);
+    _textFontPreviewHoverTimer = setTimeout(() => {
+      preview.classList.remove('hidden');
+      _updateTextFontHoverPreview();
+    }, 120);
+  };
+  const hide = () => {
+    clearTimeout(_textFontPreviewHoverTimer);
+    preview.classList.add('hidden');
+  };
+
+  sel.addEventListener('mouseenter', show);
+  sel.addEventListener('mouseleave', hide);
+  sel.addEventListener('focus', show);
+  sel.addEventListener('blur', hide);
+  sel.addEventListener('input', _updateTextFontHoverPreview);
+  sel.addEventListener('change', _updateTextFontHoverPreview);
+
+  // Keep preview in sync with color/size tweaks while visible.
+  $('textColor') && $('textColor').addEventListener('input', _updateTextFontHoverPreview);
+  $('textColor2') && $('textColor2').addEventListener('input', _updateTextFontHoverPreview);
+  $('textColorMode') && $('textColorMode').addEventListener('change', _updateTextFontHoverPreview);
+  $('textGradientAngle') && $('textGradientAngle').addEventListener('input', _updateTextFontHoverPreview);
+
+  _textFontPreviewInitialized = true;
+}
 
 function initTextTool() {
+  initTextFontPreview();
+
   // Side-panel controls: live-preview on the floating box
-  const liveUpdate = () => _updateTobStyle();
+  const syncBlendControlState = () => {
+    const blend = _getTextBlendSettings();
+    const slider = $('textBlendOpacity');
+    if (!slider) return;
+    slider.disabled = blend.blendMode === 'source-over';
+    slider.style.opacity = blend.blendMode === 'source-over' ? '0.45' : '1';
+  };
+  const syncTextColorControlState = () => {
+    const cs = _getTextColorSettings();
+    const showGrad = _isCustomGradientMode(cs);
+    const c2Row = $('textColor2Row');
+    const angRow = $('textGradientAngleRow');
+    if (c2Row) c2Row.classList.toggle('hidden', !showGrad);
+    if (angRow) angRow.classList.toggle('hidden', !showGrad || cs.mode === 'radial');
+  };
+  const liveUpdate = () => {
+    cancelAnimationFrame(_textLiveUiRaf);
+    _textLiveUiRaf = requestAnimationFrame(() => {
+      syncBlendControlState();
+      syncTextColorControlState();
+      _updateTobStyle();
+    });
+  };
+
+  $('textSize') && updateSliderFill($('textSize'));
+  $('textOpacity') && updateSliderFill($('textOpacity'));
+  $('textBlendOpacity') && updateSliderFill($('textBlendOpacity'));
+  $('textGradientAngle') && updateSliderFill($('textGradientAngle'));
+  syncBlendControlState();
+  syncTextColorControlState();
+
   $('textSize')   .addEventListener('input', () => { $('textSizeVal').textContent    = $('textSize').value;         liveUpdate(); });
   $('textOpacity').addEventListener('input', () => { $('textOpacityVal').textContent = $('textOpacity').value + '%'; liveUpdate(); });
+  $('textBlendOpacity') && $('textBlendOpacity').addEventListener('input', () => {
+    $('textBlendOpacityVal') && ($('textBlendOpacityVal').textContent = $('textBlendOpacity').value + '%');
+    liveUpdate();
+  });
   $('textColor')  .addEventListener('input', liveUpdate);
+  $('textColor2') && $('textColor2').addEventListener('input', liveUpdate);
+  $('textColorMode') && $('textColorMode').addEventListener('change', liveUpdate);
+  $('textGradientAngle') && $('textGradientAngle').addEventListener('input', () => {
+    $('textGradientAngleVal') && ($('textGradientAngleVal').textContent = $('textGradientAngle').value + '°');
+    liveUpdate();
+  });
+  $('textBlendMode') && $('textBlendMode').addEventListener('change', liveUpdate);
+  $('textFont')   .addEventListener('input', liveUpdate);
   $('textFont')   .addEventListener('change', liveUpdate);
+  $('editLastTextBtn') && $('editLastTextBtn').addEventListener('click', editLastTextStamp);
+  $('deleteLastTextBtn') && $('deleteLastTextBtn').addEventListener('click', deleteLastTextStamp);
   QA('.text-align-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       QA('.text-align-btn').forEach(b => b.classList.remove('active'));
@@ -1666,7 +2359,15 @@ function initTextTool() {
   mainCanvas.addEventListener('click', e => {
     if (state.tool !== 'text') return;
     if (!state.image) { showToast('Load an image first'); return; }
-    _spawnTextOverlay(e.clientX, e.clientY);
+
+    const pos = getCanvasPos(e);
+    const hit = _findTextStampAtCanvasPos(pos);
+    if (hit) {
+      editTextStampByIndex(hit.historyIndex, hit.stamp, true);
+      return;
+    }
+
+    _spawnTextOverlay(e.clientX, e.clientY, { anchorTextStart: true });
   });
 
   // Touch tap on canvas → spawn (only if not a brush-drag ending)
@@ -1675,7 +2376,14 @@ function initTextTool() {
     if (state.isDrawing) return;
     e.preventDefault();
     const t = e.changedTouches[0];
-    _spawnTextOverlay(t.clientX, t.clientY);
+    const pos = getCanvasPosTouch(t);
+    const hit = _findTextStampAtCanvasPos(pos);
+    if (hit) {
+      editTextStampByIndex(hit.historyIndex, hit.stamp, true);
+      return;
+    }
+
+    _spawnTextOverlay(t.clientX, t.clientY, { anchorTextStart: true });
   }, { passive: false });
 
   // Apply / Discard buttons on the overlay itself
@@ -1704,6 +2412,7 @@ function initTextTool() {
     const ar = $('canvasArea').getBoundingClientRect();
     $('textOverlayBox').style.left = (e.clientX - ar.left - _tobOffX) + 'px';
     $('textOverlayBox').style.top  = (e.clientY - ar.top  - _tobOffY) + 'px';
+    _clampOverlayToCanvasArea();
   });
   document.addEventListener('mouseup', () => {
     _tobDragging = false;
@@ -1724,73 +2433,310 @@ function initTextTool() {
     const ar = $('canvasArea').getBoundingClientRect();
     $('textOverlayBox').style.left = (e.touches[0].clientX - ar.left - _tobOffX) + 'px';
     $('textOverlayBox').style.top  = (e.touches[0].clientY - ar.top  - _tobOffY) + 'px';
+    _clampOverlayToCanvasArea();
     e.preventDefault();
   }, { passive: false });
   document.addEventListener('touchend', () => { _tobDragging = false; });
 }
 
-function _spawnTextOverlay(clientX, clientY) {
+function _spawnTextOverlay(clientX, clientY, opts) {
+  const options = Object.assign({ anchorTextStart: true }, opts || {});
   const box = $('textOverlayBox');
-  const ar  = $('canvasArea').getBoundingClientRect();
-  box.style.left = (clientX - ar.left) + 'px';
-  box.style.top  = (clientY - ar.top)  + 'px';
-  $('textOverlayContent').innerHTML = '';
+  const content = $('textOverlayContent');
+  if (!content.textContent) content.innerHTML = '';
   box.classList.remove('hidden');
+
+  if (options.anchorTextStart) {
+    const areaR = $('canvasArea').getBoundingClientRect();
+    const handleH = $('textOverlayHandle').getBoundingClientRect().height || 32;
+    const left = (clientX - areaR.left) - 14;
+    const top = (clientY - areaR.top) - handleH - 10;
+    box.style.left = left + 'px';
+    box.style.top = top + 'px';
+    _clampOverlayToCanvasArea();
+  } else {
+    _setOverlayPos(clientX, clientY);
+  }
+
   _updateTobStyle();
-  setTimeout(() => $('textOverlayContent').focus(), 40);
+  _clampOverlayToCanvasArea();
+  setTimeout(() => content.focus(), 40);
 }
 
 function _updateTobStyle() {
   const box = $('textOverlayBox');
   if (box.classList.contains('hidden')) return;
   const c = $('textOverlayContent');
-  c.style.fontSize   = ($('textSize').value || 48)    + 'px';
+  const sizePx = parseInt($('textSize').value, 10) || 48;
+  c.style.fontSize   = sizePx + 'px';
   c.style.opacity    = (parseInt($('textOpacity').value) || 100) / 100;
-  c.style.color      = $('textColor').value || '#ffffff';
-  c.style.fontFamily = $('textFont').value  || 'sans-serif';
+  const colorSettings = _getTextColorSettings();
+  const color = colorSettings.color1;
+  c.style.color = color;
+  const styleSel = parseTextStyleSelection($('textFont').value);
+  c.style.fontFamily = styleSel.fontFamily;
   const ab = document.querySelector('.text-align-btn.active');
   c.style.textAlign  = ab ? ab.dataset.align : 'left';
+  const blend = _getTextBlendSettings();
+  c.style.mixBlendMode = blend.blendMode === 'source-over' ? 'normal' : blend.blendMode;
+  c.style.opacity = blend.blendMode === 'source-over'
+    ? (parseInt($('textOpacity').value, 10) || 100) / 100
+    : clamp(((parseInt($('textOpacity').value, 10) || 100) / 100) * blend.blendOpacity, 0, 1);
+  _applyOverlayTextEffect(c, styleSel.effectId, color, sizePx);
+  _applyOverlayTextFill(c, colorSettings, sizePx, styleSel.effectId);
+  const p = $('textFontPreview');
+  if (p && !p.classList.contains('hidden')) _updateTextFontHoverPreview();
 }
 
 function _commitTextOverlay() {
   const content = $('textOverlayContent');
-  const text    = content.innerText.trim();
-  if (!text) { dismissTextOverlay(); return; }
+  const rawText = String(content.textContent || content.innerText || '').replace(/\r/g, '');
+  if (!rawText.trim()) { dismissTextOverlay(); return; }
+  const text = rawText;
 
-  const box     = $('textOverlayBox');
-  const boxR    = box.getBoundingClientRect();
-  const handleR = $('textOverlayHandle').getBoundingClientRect();
+  const contentR = content.getBoundingClientRect();
   const canvasR = mainCanvas.getBoundingClientRect();
 
-  // Top-left of text content area in screen coords
-  const screenX = boxR.left   + 14;               // CSS padding-left
-  const screenY = boxR.top    + handleR.height + 10; // handle height + padding-top
+  const cs = getComputedStyle(content);
+  const padL = parseFloat(cs.paddingLeft) || 0;
+  const padR = parseFloat(cs.paddingRight) || 0;
+  const padT = parseFloat(cs.paddingTop) || 0;
 
   // Map to canvas pixel space (accounts for current zoom & pan)
   const scaleX  = mainCanvas.width  / canvasR.width;
   const scaleY  = mainCanvas.height / canvasR.height;
-  const canvasX = (screenX - canvasR.left) * scaleX;
-  const canvasY = (screenY - canvasR.top)  * scaleY;
+  const baseLeft = (contentR.left - canvasR.left) * scaleX;
+  const baseTop  = (contentR.top  - canvasR.top)  * scaleY;
+  const canvasY = baseTop + padT * scaleY;
 
-  const fontSize  = parseInt(content.style.fontSize)  || 48;
-  const opacity   = parseFloat(content.style.opacity) || 1;
-  const color     = content.style.color               || '#ffffff';
-  const font      = content.style.fontFamily          || 'sans-serif';
+  const fontSizeUi  = parseInt(content.style.fontSize, 10) || 48;
+  const drawScale = Math.max(0.01, (scaleX + scaleY) / 2);
+  const fontSize  = fontSizeUi * drawScale;
+  const baseOpacity = (parseInt($('textOpacity').value, 10) || 100) / 100;
+  const blend = _getTextBlendSettings();
+  let opacity   = blend.blendMode === 'source-over' ? baseOpacity : clamp(baseOpacity * blend.blendOpacity, 0, 1);
+  let drawBlendMode = blend.blendMode;
+  if (opacity <= 0.001) {
+    // Safety fallback: avoid invisible stamp if overlay opacity is set to 0.
+    drawBlendMode = 'source-over';
+    opacity = Math.max(0.01, baseOpacity);
+  }
+  const colorSettings = _getTextColorSettings();
+  const color     = colorSettings.color1;
+  const styleSel  = parseTextStyleSelection($('textFont').value);
+  const font      = styleSel.fontFamily;
+  const effectId  = styleSel.effectId;
   const align     = content.style.textAlign           || 'left';
+  const innerW    = Math.max(1, (contentR.width - padL - padR) * scaleX);
+  const xLeft     = baseLeft + padL * scaleX;
+  const canvasX = align === 'center'
+    ? xLeft + innerW * 0.5
+    : (align === 'right' ? xLeft + innerW : xLeft);
 
   mainCtx.save();
+  mainCtx.globalCompositeOperation = drawBlendMode;
   mainCtx.globalAlpha  = opacity;
-  mainCtx.fillStyle    = color;
   mainCtx.font         = `${fontSize}px ${font}`;
   mainCtx.textAlign    = align;
   mainCtx.textBaseline = 'top';
   const lineH = fontSize * 1.35;
-  text.split('\n').forEach((line, i) => mainCtx.fillText(line, canvasX, canvasY + i * lineH));
+  const lines = text.split('\n');
+  lines.forEach((line, i) => {
+    _applyCanvasTextEffect(mainCtx, effectId, color, fontSize, canvasX, canvasY + i * lineH, lineH, align, line, innerW, colorSettings);
+  });
   mainCtx.restore();
 
+  const stampMeta = {
+    text,
+    canvasX,
+    canvasY,
+    align,
+    size: fontSizeUi,
+    drawSize: fontSize,
+    lineH,
+    opacity: parseInt($('textOpacity').value, 10) || 100,
+    blendMode: blend.blendMode,
+    blendOpacity: Math.round(blend.blendOpacity * 100),
+    fontValue: $('textFont').value,
+    colorMode: colorSettings.mode,
+    color1: colorSettings.color1,
+    color2: colorSettings.color2,
+    angle: colorSettings.angle,
+  };
+
   dismissTextOverlay();
-  saveHistory();
+  saveHistory({ type: 'text', stamp: stampMeta });
   showToast('✓ Text stamped to photo');
+}
+
+function _setTextControlsFromStamp(stamp) {
+  if (!stamp) return;
+  if ($('textFont') && stamp.fontValue) $('textFont').value = stamp.fontValue;
+  if ($('textSize') && stamp.size !== undefined) {
+    $('textSize').value = clamp(stamp.size, parseInt($('textSize').min, 10), parseInt($('textSize').max, 10));
+    $('textSizeVal') && ($('textSizeVal').textContent = $('textSize').value);
+    updateSliderFill($('textSize'));
+  }
+  if ($('textOpacity') && stamp.opacity !== undefined) {
+    $('textOpacity').value = clamp(stamp.opacity, parseInt($('textOpacity').min, 10), parseInt($('textOpacity').max, 10));
+    $('textOpacityVal') && ($('textOpacityVal').textContent = $('textOpacity').value + '%');
+    updateSliderFill($('textOpacity'));
+  }
+  if ($('textBlendMode') && stamp.blendMode) $('textBlendMode').value = stamp.blendMode;
+  if ($('textBlendOpacity') && stamp.blendOpacity !== undefined) {
+    $('textBlendOpacity').value = clamp(stamp.blendOpacity, parseInt($('textBlendOpacity').min, 10), parseInt($('textBlendOpacity').max, 10));
+    $('textBlendOpacityVal') && ($('textBlendOpacityVal').textContent = $('textBlendOpacity').value + '%');
+    updateSliderFill($('textBlendOpacity'));
+  }
+  if ($('textColorMode') && stamp.colorMode) $('textColorMode').value = stamp.colorMode;
+  if ($('textColor') && stamp.color1) $('textColor').value = stamp.color1;
+  if ($('textColor2') && stamp.color2) $('textColor2').value = stamp.color2;
+  if ($('textGradientAngle') && stamp.angle !== undefined) {
+    $('textGradientAngle').value = clamp(stamp.angle, parseInt($('textGradientAngle').min, 10), parseInt($('textGradientAngle').max, 10));
+    $('textGradientAngleVal') && ($('textGradientAngleVal').textContent = $('textGradientAngle').value + '°');
+    updateSliderFill($('textGradientAngle'));
+  }
+
+  QA('.text-align-btn').forEach(b => b.classList.toggle('active', b.dataset.align === (stamp.align || 'left')));
+}
+
+function _repositionOverlayToStamp(stamp) {
+  if (!stamp) return;
+  const box = $('textOverlayBox');
+  const content = $('textOverlayContent');
+  if (!box || !content || box.classList.contains('hidden')) return;
+
+  const canvasR = mainCanvas.getBoundingClientRect();
+  const areaR = $('canvasArea').getBoundingClientRect();
+  const contentR = content.getBoundingClientRect();
+  const handleR = $('textOverlayHandle').getBoundingClientRect();
+  const cs = getComputedStyle(content);
+  const padL = parseFloat(cs.paddingLeft) || 0;
+  const padR = parseFloat(cs.paddingRight) || 0;
+  const padT = parseFloat(cs.paddingTop) || 0;
+
+  const innerWScreen = Math.max(1, contentR.width - padL - padR);
+  const targetX = canvasR.left + (stamp.canvasX / mainCanvas.width) * canvasR.width;
+  const targetY = canvasR.top + (stamp.canvasY / mainCanvas.height) * canvasR.height;
+
+  const contentLeft = stamp.align === 'center'
+    ? targetX - innerWScreen / 2 - padL
+    : (stamp.align === 'right' ? targetX - innerWScreen - padL : targetX - padL);
+  const contentTop = targetY - padT;
+
+  const boxLeft = contentLeft - areaR.left;
+  const boxTop = contentTop - areaR.top - handleR.height;
+
+  box.style.left = boxLeft + 'px';
+  box.style.top = boxTop + 'px';
+  _clampOverlayToCanvasArea();
+}
+
+function _collectActiveTextStamps() {
+  const stamps = [];
+  for (let i = 0; i <= state.historyIndex; i++) {
+    const h = state.history[i];
+    if (h && h.meta && h.meta.type === 'text' && h.meta.stamp) {
+      stamps.push({ historyIndex: i, stamp: h.meta.stamp });
+    }
+  }
+  return stamps;
+}
+
+function _findTextStampAtCanvasPos(pos) {
+  if (!pos) return null;
+  const stamps = _collectActiveTextStamps();
+  if (!stamps.length) return null;
+
+  for (let i = stamps.length - 1; i >= 0; i--) {
+    const item = stamps[i];
+    const s = item.stamp;
+    const parsed = parseTextStyleSelection(s.fontValue || 'sans-serif||none');
+    const fontPx = s.drawSize || s.size || 48;
+    const lineH = s.lineH || (fontPx * 1.35);
+    const lines = String(s.text || '').split('\n');
+
+    mainCtx.save();
+    mainCtx.font = `${fontPx}px ${parsed.fontFamily}`;
+    let maxW = 0;
+    lines.forEach(line => {
+      const w = mainCtx.measureText(line).width;
+      if (w > maxW) maxW = w;
+    });
+    mainCtx.restore();
+
+    const pad = Math.max(6, fontPx * 0.08);
+    const left = s.align === 'center'
+      ? s.canvasX - maxW / 2
+      : (s.align === 'right' ? s.canvasX - maxW : s.canvasX);
+    const top = s.canvasY;
+    const right = left + maxW;
+    const bottom = top + lineH * lines.length;
+
+    if (pos.x >= left - pad && pos.x <= right + pad && pos.y >= top - pad && pos.y <= bottom + pad) {
+      return item;
+    }
+  }
+  return null;
+}
+
+function editTextStampByIndex(stampHistoryIndex, stamp, fromClick) {
+  if (stampHistoryIndex <= 0 || !stamp) { showToast('Cannot edit this text'); return; }
+  if (stampHistoryIndex > state.historyIndex) { showToast('Text is not in current state'); return; }
+
+  const removedSteps = state.historyIndex - stampHistoryIndex;
+  state.historyIndex = stampHistoryIndex - 1;
+  applyHistorySnap(state.historyIndex);
+  state.history = state.history.slice(0, state.historyIndex + 1);
+  updateHistoryUI();
+
+  _setTextControlsFromStamp(stamp);
+
+  const cvRect = mainCanvas.getBoundingClientRect();
+  const clientX = cvRect.left + (stamp.canvasX / mainCanvas.width) * cvRect.width;
+  const clientY = cvRect.top + (stamp.canvasY / mainCanvas.height) * cvRect.height;
+  _spawnTextOverlay(clientX, clientY, { anchorTextStart: false });
+
+  const content = $('textOverlayContent');
+  content.textContent = stamp.text || '';
+  _updateTobStyle();
+  _repositionOverlayToStamp(stamp);
+  content.focus();
+
+  if (removedSteps > 0 && fromClick) {
+    showToast('✎ Editing selected text (later edits removed)');
+  } else {
+    showToast('✎ Editing selected text');
+  }
+}
+
+function editLastTextStamp() {
+  if (!state.image) { showToast('Load an image first'); return; }
+  if (state.historyIndex <= 0) { showToast('No text to edit'); return; }
+
+  const top = state.history[state.historyIndex];
+  if (!top || !top.meta || top.meta.type !== 'text' || !top.meta.stamp) {
+    showToast('Last edit is not text. Undo until the last text stamp.');
+    return;
+  }
+  editTextStampByIndex(state.historyIndex, top.meta.stamp, false);
+}
+
+function deleteLastTextStamp() {
+  if (!state.image) { showToast('Load an image first'); return; }
+  if (state.historyIndex <= 0) { showToast('No text to delete'); return; }
+  const top = state.history[state.historyIndex];
+  if (!top || !top.meta || top.meta.type !== 'text') {
+    showToast('Last edit is not text. Undo to reach text stamp.');
+    return;
+  }
+
+  state.historyIndex--;
+  applyHistorySnap(state.historyIndex);
+  // Remove the deleted text state from forward history
+  state.history = state.history.slice(0, state.historyIndex + 1);
+  updateHistoryUI();
+  showToast('✓ Last text deleted');
 }
 
 function dismissTextOverlay() {
