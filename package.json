@@ -1,0 +1,21 @@
+{
+  "name": "bk-for-luxeditor-v6",
+  "version": "1.0.0",
+  "description": "LuxEditor static web app",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"No automated tests configured\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShubhamNale1008/LuxEditor.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ShubhamNale1008/LuxEditor/issues"
+  },
+  "homepage": "https://github.com/ShubhamNale1008/LuxEditor#readme",
+  "private": true
+}

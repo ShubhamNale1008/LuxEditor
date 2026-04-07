@@ -24,24 +24,67 @@ const FILTERS = [
   { name: 'Invert',      label: 'Invert',            css: 'invert(1)' },
 
   // ── VSCO-Style (Premium) ──
-  { name: 'A4',          css: 'sepia(0.2) contrast(0.9) brightness(1.05) saturate(0.85)',                          group: 'vsco', premium: true },
-  { name: 'A6',          css: 'sepia(0.15) brightness(1.08) contrast(0.95) saturate(0.92)',                        group: 'vsco', premium: true },
-  { name: 'C1',          css: 'hue-rotate(195deg) saturate(1.1) brightness(1.1) contrast(0.9)',                    group: 'vsco', premium: true },
-  { name: 'F2',          css: 'sepia(0.35) saturate(1.5) brightness(1.1) hue-rotate(-8deg)',                       group: 'vsco', premium: true },
-  { name: 'HB2',         css: 'grayscale(1) contrast(1.42) brightness(0.94)',                                      group: 'vsco', premium: true },
-  { name: 'M5',          css: 'sepia(0.4) contrast(0.95) brightness(1.05) saturate(1.2) hue-rotate(-5deg)',        group: 'vsco', premium: true },
-  { name: 'P5',          css: 'saturate(1.6) contrast(1.18) brightness(1.04) hue-rotate(5deg)',                    group: 'vsco', premium: true },
+  { name: 'A4',          label: 'A4',          css: 'sepia(0.2) contrast(0.9) brightness(1.05) saturate(0.85)',                          group: 'vsco', premium: true },
+  { name: 'A6',          label: 'A6',          css: 'sepia(0.15) brightness(1.08) contrast(0.95) saturate(0.92)',                        group: 'vsco', premium: true },
+  { name: 'C1',          label: 'C1',          css: 'hue-rotate(195deg) saturate(1.1) brightness(1.1) contrast(0.9)',                    group: 'vsco', premium: true },
+  { name: 'F2',          label: 'F2',          css: 'sepia(0.35) saturate(1.5) brightness(1.1) hue-rotate(-8deg)',                       group: 'vsco', premium: true },
+  { name: 'HB2',         label: 'HB2',         css: 'grayscale(1) contrast(1.42) brightness(0.94)',                                      group: 'vsco', premium: true },
+  { name: 'M5',          label: 'M5',          css: 'sepia(0.4) contrast(0.95) brightness(1.05) saturate(1.2) hue-rotate(-5deg)',        group: 'vsco', premium: true },
+  { name: 'P5',          label: 'P5',          css: 'saturate(1.6) contrast(1.18) brightness(1.04) hue-rotate(5deg)',                    group: 'vsco', premium: true },
 
   // ── Instagram-Style (Premium) ──
-  { name: 'Clarendon',   css: 'contrast(1.2) saturate(1.35) brightness(1.1) hue-rotate(5deg)',                     group: 'instagram', premium: true },
-  { name: 'Gingham',     css: 'contrast(0.85) saturate(0.75) brightness(1.05) sepia(0.15)',                        group: 'instagram', premium: true },
-  { name: 'Juno',        css: 'sepia(0.2) saturate(1.6) contrast(1.15) brightness(1.05) hue-rotate(-10deg)',       group: 'instagram', premium: true },
-  { name: 'Lark',        css: 'brightness(1.15) contrast(0.9) saturate(0.85) hue-rotate(5deg)',                    group: 'instagram', premium: true },
-  { name: 'Ludwig',      css: 'brightness(1.12) contrast(0.95) saturate(0.9)',                                     group: 'instagram', premium: true },
-  { name: 'Moon_IG',     css: 'grayscale(1) brightness(1.1) contrast(1.1)',                                        group: 'instagram', premium: true },
-  { name: 'Reyes',       css: 'sepia(0.3) contrast(0.85) brightness(1.15) saturate(0.75)',                         group: 'instagram', premium: true },
-  { name: 'Sierra',      css: 'sepia(0.25) contrast(0.9) brightness(1.1) saturate(0.9) hue-rotate(-5deg)',         group: 'instagram', premium: true },
+  { name: 'Clarendon',   label: 'Clarendon',   css: 'contrast(1.2) saturate(1.35) brightness(1.1) hue-rotate(5deg)',                     group: 'instagram', premium: true },
+  { name: 'Gingham',     label: 'Gingham',     css: 'contrast(0.85) saturate(0.75) brightness(1.05) sepia(0.15)',                        group: 'instagram', premium: true },
+  { name: 'Juno',        label: 'Juno',        css: 'sepia(0.2) saturate(1.6) contrast(1.15) brightness(1.05) hue-rotate(-10deg)',       group: 'instagram', premium: true },
+  { name: 'Lark',        label: 'Lark',        css: 'brightness(1.15) contrast(0.9) saturate(0.85) hue-rotate(5deg)',                    group: 'instagram', premium: true },
+  { name: 'Ludwig',      label: 'Ludwig',      css: 'brightness(1.12) contrast(0.95) saturate(0.9)',                                     group: 'instagram', premium: true },
+  { name: 'Moon_IG',     label: 'Moon',        css: 'grayscale(1) brightness(1.1) contrast(1.1)',                                        group: 'instagram', premium: true },
+  { name: 'Reyes',       label: 'Reyes',       css: 'sepia(0.3) contrast(0.85) brightness(1.15) saturate(0.75)',                         group: 'instagram', premium: true },
+  { name: 'Sierra',      label: 'Sierra',      css: 'sepia(0.25) contrast(0.9) brightness(1.1) saturate(0.9) hue-rotate(-5deg)',         group: 'instagram', premium: true },
+  { name: 'Aden',        label: 'Aden',        css: 'sepia(0.18) brightness(1.12) contrast(0.9) saturate(0.86) hue-rotate(8deg)',        group: 'instagram', premium: true },
+  { name: 'Rise',        label: 'Rise',        css: 'sepia(0.2) brightness(1.08) contrast(0.92) saturate(0.9) hue-rotate(-6deg)',        group: 'instagram', premium: true },
+  { name: 'Valencia',    label: 'Valencia',    css: 'sepia(0.24) brightness(1.1) contrast(0.9) saturate(1.02)',                          group: 'instagram', premium: true },
+  { name: 'Perpetua',    label: 'Perpetua',    css: 'brightness(1.12) contrast(0.94) saturate(0.9) hue-rotate(3deg)',                    group: 'instagram', premium: true },
+  { name: 'LoFi',        label: 'Lo-Fi',       css: 'contrast(1.36) saturate(1.28) brightness(1.0)',                                     group: 'instagram', premium: true },
+  { name: 'Kelvin',      label: 'Kelvin',      css: 'sepia(0.24) contrast(1.1) brightness(1.04) saturate(1.12) hue-rotate(-16deg)',      group: 'instagram', premium: true },
+  { name: 'Mayfair',     label: 'Mayfair',     css: 'brightness(1.08) contrast(1.03) saturate(0.94) sepia(0.12)',                        group: 'instagram', premium: true },
+  { name: 'XPro2',       label: 'X-Pro II',    css: 'contrast(1.4) saturate(1.22) brightness(0.96) hue-rotate(-4deg)',                   group: 'instagram', premium: true },
+
+  // ── Premium Editorial / Cinema ──
+  { name: 'NoirVelvet',    label: 'Noir Velvet',      css: 'grayscale(0.85) contrast(1.32) brightness(0.9) saturate(0.72)',                   group: 'premium', premium: true },
+  { name: 'AmberCine',     label: 'Amber Cine',       css: 'sepia(0.26) contrast(1.08) brightness(1.03) saturate(1.08) hue-rotate(-12deg)',   group: 'premium', premium: true },
+  { name: 'ArcticFade',    label: 'Arctic Fade',      css: 'contrast(0.9) brightness(1.1) saturate(0.8) hue-rotate(14deg)',                   group: 'premium', premium: true },
+  { name: 'SlateMatte',    label: 'Slate Matte',      css: 'contrast(0.78) brightness(1.13) saturate(0.84)',                                  group: 'premium', premium: true },
+  { name: 'PearlPortrait', label: 'Pearl Portrait',   css: 'brightness(1.1) contrast(0.92) saturate(0.9) sepia(0.1)',                         group: 'premium', premium: true },
+  { name: 'ChromePop',     label: 'Chrome Pop',       css: 'contrast(1.42) saturate(1.28) brightness(1.02) hue-rotate(2deg)',                 group: 'premium', premium: true },
+  { name: 'DustyRose',     label: 'Dusty Rose',       css: 'sepia(0.2) saturate(0.9) brightness(1.08) contrast(0.92) hue-rotate(-18deg)',     group: 'premium', premium: true },
+  { name: 'LuxeTeal',      label: 'Luxe Teal',        css: 'contrast(1.14) saturate(1.1) brightness(0.95) hue-rotate(10deg)',                 group: 'premium', premium: true },
+  { name: 'FilmIvory',     label: 'Film Ivory',       css: 'sepia(0.34) contrast(0.86) brightness(1.12) saturate(0.8)',                       group: 'premium', premium: true },
+  { name: 'UrbanSteel',    label: 'Urban Steel',      css: 'grayscale(0.2) contrast(1.3) saturate(0.72) brightness(0.94)',                    group: 'premium', premium: true },
+  { name: 'VelvetMono',    label: 'Velvet Mono',      css: 'grayscale(0.95) contrast(1.26) brightness(0.93)',                                  group: 'premium', premium: true },
+  { name: 'SunsetGold',    label: 'Sunset Gold',      css: 'sepia(0.3) contrast(1.06) brightness(1.08) saturate(1.12) hue-rotate(-14deg)',     group: 'premium', premium: true },
+  { name: 'OceanGlass',    label: 'Ocean Glass',      css: 'contrast(1.08) brightness(1.02) saturate(0.94) hue-rotate(12deg)',                 group: 'premium', premium: true },
+  { name: 'StudioIvory',   label: 'Studio Ivory',     css: 'sepia(0.22) contrast(0.88) brightness(1.14) saturate(0.82)',                       group: 'premium', premium: true },
+  { name: 'NeonCity',      label: 'Neon City',        css: 'contrast(1.38) saturate(1.36) brightness(1.0) hue-rotate(18deg)',                  group: 'premium', premium: true },
 ];
+
+const FILTER_GROUP_META = {
+  vsco: {
+    heading: 'VSCO Style',
+    badge: 'PRO',
+    title: 'VSCO Premium',
+  },
+  instagram: {
+    heading: 'Instagram Premium',
+    badge: 'PRO',
+    title: 'Instagram Premium',
+  },
+  premium: {
+    heading: 'Editorial Premium',
+    badge: 'LUXE',
+    title: 'Editorial Premium',
+  },
+};
 
 // ─────────────────────── EFFECTS (One-Click Presets) ───────────────────────
 
@@ -52,6 +95,11 @@ const EFFECTS = [
   { name: 'FilmGrain',      label: 'Film Grain',            group: 'cinematic',    icon: '🎞️', adj: { grain:65, contrast:12, saturation:-10, shadows:10, highlights:-15 } },
   { name: 'MovieTone',      label: 'Movie Tone',            group: 'cinematic',    icon: '🎥', adj: { brightness:-12, contrast:32, saturation:8, shadows:18, highlights:-25, vignette:40 } },
   { name: 'TealOrangeFX',   label: 'Teal & Orange',         group: 'cinematic',    icon: '🟠', adj: { contrast:15, saturation:10, temperature:-5 }, filter: 'TealOrange' },
+  { name: 'CineBloom',      label: 'Cine Bloom',            group: 'cinematic',    icon: '🎇', adj: { glow:42, highlights:-22, contrast:8, grain:14, vignette:18 } },
+  { name: 'NightDrive',     label: 'Night Drive',           group: 'cinematic',    icon: '🌃', adj: { brightness:-16, contrast:26, saturation:6, temperature:-10, vignette:34, grain:22 }, filter: 'LuxeTeal' },
+  { name: 'RetroTrailer',   label: 'Retro Trailer',         group: 'cinematic',    icon: '📽️', adj: { contrast:20, saturation:-8, dust:34, lightLeaks:24, grain:30 }, filter: 'FilmIvory' },
+  { name: 'MidnightNoir',   label: 'Midnight Noir',         group: 'cinematic',    icon: '🌙', adj: { brightness:-20, contrast:30, saturation:-22, grain:34, vignette:42 }, filter: 'NoirVelvet' },
+  { name: 'CineSteel',      label: 'Cine Steel',            group: 'cinematic',    icon: '🔩', adj: { contrast:18, saturation:-12, temperature:-14, dehaze:12, grain:20 }, filter: 'UrbanSteel' },
 
   // ── Portrait ──
   // bkBlur = background blur (edges blurred, centre/face stays sharp)
@@ -60,12 +108,22 @@ const EFFECTS = [
   { name: 'FaceGlow',       label: 'Face Glow',             group: 'portrait',     icon: '💫', adj: { glow:50, brightness:18, contrast:-10, highlights:-15, saturation:8, bkBlur:18 } },
   { name: 'StudioPortrait', label: 'Studio Portrait',       group: 'portrait',     icon: '📸', adj: { brightness:10, contrast:20, clarity:12, vignette:18, saturation:5, highlights:-12, bkBlur:28 } },
   { name: 'BeautySoft',     label: 'Beauty Soft',           group: 'portrait',     icon: '🌸', adj: { bkBlur:30, glow:32, brightness:14, contrast:-12, saturation:8, temperature:8 } },
+  { name: 'EditorialSkin',  label: 'Editorial Skin',        group: 'portrait',     icon: '🪞', adj: { clarity:-10, noiseReduction:24, brightness:10, highlights:-18, glow:18 } },
+  { name: 'CreamyPortrait', label: 'Creamy Portrait',       group: 'portrait',     icon: '🥛', adj: { bkBlur:26, brightness:16, contrast:-10, saturation:-6, temperature:10, glow:24 }, filter: 'PearlPortrait' },
+  { name: 'HeadshotPro',    label: 'Headshot Pro',          group: 'portrait',     icon: '🎯', adj: { clarity:18, sharpness:22, contrast:12, highlights:-10, bkBlur:24 } },
+  { name: 'NaturalGlow',    label: 'Natural Glow',          group: 'portrait',     icon: '🌼', adj: { brightness:12, contrast:-6, highlights:-16, saturation:4, glow:22, noiseReduction:14 } },
+  { name: 'SoftPearl',      label: 'Soft Pearl',            group: 'portrait',     icon: '🫧', adj: { bkBlur:20, clarity:-8, brightness:14, contrast:-12, glow:20 }, filter: 'StudioIvory' },
 
   // ── Wedding / Romantic ──
   { name: 'WeddingGlow',    label: 'Wedding Glow',          group: 'wedding',      icon: '💍', adj: { brightness:22, contrast:-12, highlights:-28, saturation:-12, glow:45, temperature:15, bkBlur:20 } },
   { name: 'RomanticSoft',   label: 'Romantic Soft Light',   group: 'wedding',      icon: '🌹', adj: { brightness:15, contrast:-8, bkBlur:28, glow:38, temperature:18, saturation:-8 } },
   { name: 'DreamyLight',    label: 'Dreamy Light',          group: 'wedding',      icon: '🌟', adj: { brightness:20, contrast:-18, bkBlur:42, glow:55, highlights:-22, saturation:-18 } },
   { name: 'BridalTone',     label: 'Bridal Tone',           group: 'wedding',      icon: '🤍', adj: { brightness:25, contrast:-14, highlights:-35, saturation:-20, temperature:12, whites:18, bkBlur:15 } },
+  { name: 'IvoryBloom',     label: 'Ivory Bloom',           group: 'wedding',      icon: '🕊️', adj: { brightness:18, highlights:-30, whites:20, glow:34, temperature:14, saturation:-14 }, filter: 'FilmIvory' },
+  { name: 'RoseMist',       label: 'Rose Mist',             group: 'wedding',      icon: '🌷', adj: { brightness:12, contrast:-12, saturation:-10, tint:12, glow:30, bkBlur:26 }, filter: 'DustyRose' },
+  { name: 'GoldenVows',     label: 'Golden Vows',           group: 'wedding',      icon: '💫', adj: { temperature:22, highlights:-24, contrast:-6, brightness:16, grain:12, lightLeaks:18 }, filter: 'AmberCine' },
+  { name: 'PastelPromise',  label: 'Pastel Promise',        group: 'wedding',      icon: '🎀', adj: { brightness:14, contrast:-14, saturation:-12, tint:8, glow:26, vignette:14 }, filter: 'DustyRose' },
+  { name: 'SunsetCeremony', label: 'Sunset Ceremony',       group: 'wedding',      icon: '🌅', adj: { temperature:26, highlights:-20, shadows:12, glow:24, lightLeaks:26 }, filter: 'SunsetGold' },
 
   // ── Professional Photography ──
   { name: 'BokehBlur',      label: 'Bokeh Blur',            group: 'professional', icon: '⭕', adj: { bkBlur:85, clarity:5 } },
@@ -74,6 +132,12 @@ const EFFECTS = [
   { name: 'SoftFocus',      label: 'Soft Focus',            group: 'professional', icon: '🌫️', adj: { bkBlur:32, brightness:8, clarity:-12 } },
   { name: 'HDRPopFX',       label: 'HDR Pop',               group: 'professional', icon: '⚡', adj: { contrast:35, saturation:35, clarity:28, dehaze:18 } },
   { name: 'MatteFadeFX',    label: 'Matte Fade',            group: 'professional', icon: '🎞', adj: { contrast:-22, saturation:-18, brightness:14, blacks:15 } },
+  { name: 'MagazineCover',  label: 'Magazine Cover',        group: 'professional', icon: '📰', adj: { clarity:22, sharpness:20, contrast:16, saturation:6, dehaze:10 } },
+  { name: 'CommercialClean',label: 'Commercial Clean',      group: 'professional', icon: '💼', adj: { brightness:8, contrast:10, highlights:-14, shadows:10, noiseReduction:20, clarity:10 } },
+  { name: 'StudioChrome',   label: 'Studio Chrome',         group: 'professional', icon: '🧊', adj: { contrast:24, saturation:12, clarity:16, glow:10, vignette:12 }, filter: 'ChromePop' },
+  { name: 'FineArtMatte',   label: 'Fine Art Matte',        group: 'professional', icon: '🖼️', adj: { contrast:-18, blacks:18, saturation:-12, grain:20, vignette:22 }, filter: 'SlateMatte' },
+  { name: 'ProductPolish',  label: 'Product Polish',        group: 'professional', icon: '🛍️', adj: { sharpness:20, clarity:20, highlights:-10, shadows:8, dehaze:12, noiseReduction:12 } },
+  { name: 'Architectural',  label: 'Architectural',         group: 'professional', icon: '🏙️', adj: { contrast:22, clarity:24, dehaze:20, saturation:-6, temperature:-4 }, filter: 'UrbanSteel' },
 ];
 
 const IS_MOBILE = window.innerWidth <= 767 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
@@ -108,7 +172,7 @@ const state = {
     highlights: 0, shadows: 0, whites: 0, blacks: 0,
     saturation: 0, vibrance: 0, temperature: 0, tint: 0, hue: 0,
     sharpness: 0, clarity: 0, dehaze: 0, noiseReduction: 0,
-    vignette: 0, grain: 0, blur: 0, glow: 0, bkBlur: 0,
+    vignette: 0, grain: 0, dust: 0, lightLeaks: 0, blur: 0, glow: 0, bkBlur: 0,
   },
 
   // Active preset filter
@@ -147,6 +211,8 @@ const QA = sel => document.querySelectorAll(sel);
 let mainCanvas, mainCtx;
 let vigCanvas,  vigCtx;
 let grainCanvas, grainCtx;
+let dustCanvas,  dustCtx;
+let leakCanvas,  leakCtx;
 let bkBlurCanvas, bkBlurCtx;
 
 // Tracks which adj keys the most recently applied Effect set,
@@ -163,6 +229,10 @@ document.addEventListener('DOMContentLoaded', () => {
   vigCtx      = vigCanvas.getContext('2d');
   grainCanvas    = $('grainCanvas');
   grainCtx       = grainCanvas.getContext('2d');
+  dustCanvas     = $('dustCanvas');
+  dustCtx        = dustCanvas.getContext('2d');
+  leakCanvas     = $('leakCanvas');
+  leakCtx        = leakCanvas.getContext('2d');
   bkBlurCanvas   = $('bkBlurCanvas');
   bkBlurCtx      = bkBlurCanvas.getContext('2d');
 
@@ -257,8 +327,8 @@ function loadImageFile(file) {
     state.imageHeight = H;
 
     // Set canvas dimensions
-    mainCanvas.width  = vigCanvas.width  = grainCanvas.width  = bkBlurCanvas.width  = W;
-    mainCanvas.height = vigCanvas.height = grainCanvas.height = bkBlurCanvas.height = H;
+    mainCanvas.width  = vigCanvas.width  = grainCanvas.width  = dustCanvas.width = leakCanvas.width = bkBlurCanvas.width  = W;
+    mainCanvas.height = vigCanvas.height = grainCanvas.height = dustCanvas.height = leakCanvas.height = bkBlurCanvas.height = H;
 
     // Reset all state
     resetAdjState();
@@ -343,7 +413,7 @@ function updateCanvasTransformOnly() {
   mainCanvas.style.filter    = _cachedFilterStr;
   mainCanvas.style.transform = transform;
   // Overlay canvases track main canvas position
-  for (const cv of [vigCanvas, grainCanvas, bkBlurCanvas]) {
+  for (const cv of [vigCanvas, grainCanvas, dustCanvas, leakCanvas, bkBlurCanvas]) {
     cv.style.transform = transform;
     cv.style.width     = mainCanvas.style.width;
     cv.style.height    = mainCanvas.style.height;
@@ -409,6 +479,23 @@ function buildFilterString(adjOverride, filterOverride) {
   // Blur (full-image blur — manual slider only, NOT used in effects)
   if (a.blur > 0) parts.push(`blur(${(a.blur * 0.22).toFixed(3)}px)`);
 
+  // Sharpness (via SVG Convolution Filter)
+  if (a.sharpness > 0) {
+    const s = a.sharpness / 100; // 0 to 1
+    // Stronger center, negative neighbors. 
+    // Normalized to preserve brightness: 1 + 4*s - 4*s = 1
+    const center = 1 + (4 * s);
+    const edge = -s;
+    const matrix = `0 ${edge} 0 ${edge} ${center} ${edge} 0 ${edge} 0`;
+    
+    // Update SVG in DOM before returning filter string
+    const feConvolve = document.getElementById('sharpenMatrix');
+    if (feConvolve) {
+      feConvolve.setAttribute('kernelMatrix', matrix);
+    }
+    parts.push(`url(#svg-sharpen)`);
+  }
+
   // Preset filter
   const preset = FILTERS.find(f => f.name === activeFilterName);
   if (preset && preset.css) parts.push(preset.css);
@@ -470,6 +557,62 @@ function renderGrain() {
 
 // Background (portrait/bokeh) blur — keeps the CENTRE (subject) sharp and blurs
 // only the periphery by using an elliptical destination-out mask on the blurred layer.
+function renderDust() {
+  if (!mainCanvas.width) return;
+  const W = dustCanvas.width, H = dustCanvas.height;
+  const amount = state.adj.dust;
+  
+  dustCtx.clearRect(0, 0, W, H);
+  if (amount === 0) { dustCanvas.style.opacity = '0'; return; }
+  
+  dustCanvas.style.opacity = '1';
+  dustCanvas.style.mixBlendMode = 'screen';
+  
+  dustCtx.strokeStyle = `rgba(255,255,255,${amount / 200})`;
+  dustCtx.lineWidth = Math.max(1, W / 1000);
+  
+  // Deterministic random so dust doesn't jump
+  let seed = 1234;
+  const rand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+  
+  const count = Math.floor(amount * (W / 500));
+  dustCtx.beginPath();
+  for (let i = 0; i < count; i++) {
+    const x = rand() * W;
+    const y = rand() * H;
+    const len = rand() * 40 + 10;
+    const angle = rand() * Math.PI * 2;
+    // Scratches
+    dustCtx.moveTo(x, y);
+    dustCtx.lineTo(x + Math.cos(angle) * len, y + Math.sin(angle) * len);
+    // Dust specs
+    dustCtx.moveTo(x+10, y+10);
+    dustCtx.arc(x+10, y+10, rand() * 3, 0, Math.PI * 2);
+  }
+  dustCtx.stroke();
+}
+
+function renderLightLeaks() {
+  if (!mainCanvas.width) return;
+  const W = leakCanvas.width, H = leakCanvas.height;
+  const amount = state.adj.lightLeaks;
+  
+  leakCtx.clearRect(0, 0, W, H);
+  if (amount === 0) { leakCanvas.style.opacity = '0'; return; }
+  
+  leakCanvas.style.opacity = '1';
+  leakCanvas.style.mixBlendMode = 'screen';
+  
+  // Draw a warm analog-style edge burn
+  const grad = leakCtx.createLinearGradient(0, 0, W * 0.4, H * 0.4);
+  grad.addColorStop(0, `rgba(255, 60, 0, ${amount / 100})`);
+  grad.addColorStop(0.5, `rgba(255, 120, 0, ${amount / 150})`);
+  grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  
+  leakCtx.fillStyle = grad;
+  leakCtx.fillRect(0, 0, W, H);
+}
+
 function renderBkBlur() {
   if (!mainCanvas.width) return;
   const W = bkBlurCanvas.width, H = bkBlurCanvas.height;
@@ -531,11 +674,25 @@ function renderBkBlur() {
 function initZoomPan() {
   const workspace = $('canvasArea');
 
-  // Wheel zoom
+  // Wheel zoom with premium trackpad support and zoom-to-cursor
   workspace.addEventListener('wheel', e => {
     if (!state.image) return;
     e.preventDefault();
-    zoomBy(e.deltaY < 0 ? 1.1 : 0.9);
+    
+    // CtrlKey implies a pinch-gesture on trackpads. Scale smoothly.
+    let factor = 1;
+    if (e.ctrlKey) {
+      factor = Math.exp(-e.deltaY / 150);
+    } else {
+      factor = e.deltaY < 0 ? 1.08 : 0.92;
+    }
+    
+    // Calculate cursor position relative to center of canvasArea
+    const r = $('canvasArea').getBoundingClientRect();
+    const mx = e.clientX - (r.left + r.width / 2);
+    const my = e.clientY - (r.top + r.height / 2);
+    
+    zoomBy(factor, mx, my);
   }, { passive: false });
 
   // Mouse pan (select tool or space+drag)
@@ -570,6 +727,14 @@ function initZoomPan() {
     if (!panning) return;
     panning = false;
     document.body.style.cursor = '';
+  });
+
+  // Double tap to Reset Zoom (Fit to Screen) 
+  workspace.addEventListener('dblclick', (e) => {
+    if (!state.image) return;
+    if (e.target.closest('.panel') || e.target.closest('.top-bar') || e.target.closest('.side-handle')) return;
+    fitToScreen();
+    showToast('Reset zoom to fit');
   });
 
   // Button controls
@@ -616,8 +781,23 @@ function initZoomPan() {
   $('canvasArea').addEventListener('touchend', () => { touchPanning = false; lastDist = 0; });
 }
 
-function zoomBy(factor) {
-  state.zoom = Math.max(0.08, Math.min(12, state.zoom * factor));
+function zoomBy(factor, cx, cy) {
+  const maxZoom = 12;
+  const minZoom = 0.08;
+  const oldZoom = state.zoom;
+  
+  let newZoom = oldZoom * factor;
+  newZoom = Math.max(minZoom, Math.min(newZoom, maxZoom));
+  
+  if (newZoom === oldZoom) return;
+  
+  // If coordinates are provided (relative to canvasArea center), pin to cursor
+  if (cx !== undefined && cy !== undefined) {
+    state.panX = cx - (cx - state.panX) * (newZoom / oldZoom);
+    state.panY = cy - (cy - state.panY) * (newZoom / oldZoom);
+  }
+  
+  state.zoom = newZoom;
   // Zoom never changes adjustments — skip the filter rebuild
   updateCanvasTransformOnly();
   updateZoomDisplay();
@@ -658,8 +838,18 @@ function saveHistory(meta) {
     canvasH:     mainCanvas.height,
     flipH:       state.flipH,
     flipV:       state.flipV,
-    meta:        meta || null,
+    meta:        meta || 'Adjustment',
+    time:        new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+    thumb:       null
   };
+
+  // Add miniature canvas for rendering the history thumbnail efficiently
+  const cv = document.createElement('canvas');
+  cv.width = 64; 
+  cv.height = Math.max(1, Math.round(64 * (mainCanvas.height / mainCanvas.width)));
+  const ctx = cv.getContext('2d');
+  ctx.drawImage(mainCanvas, 0, 0, cv.width, cv.height);
+  snap.thumb = cv.toDataURL('image/jpeg', 0.5);
 
   // Trim forward history
   state.history = state.history.slice(0, state.historyIndex + 1);
@@ -691,8 +881,8 @@ function applyHistorySnap(index) {
   const snap = state.history[index];
   if (!snap) return;
 
-  mainCanvas.width  = vigCanvas.width  = grainCanvas.width  = bkBlurCanvas.width  = snap.canvasW;
-  mainCanvas.height = vigCanvas.height = grainCanvas.height = bkBlurCanvas.height = snap.canvasH;
+  mainCanvas.width  = vigCanvas.width  = grainCanvas.width  = dustCanvas.width = leakCanvas.width = bkBlurCanvas.width  = snap.canvasW;
+  mainCanvas.height = vigCanvas.height = grainCanvas.height = dustCanvas.height = leakCanvas.height = bkBlurCanvas.height = snap.canvasH;
 
   mainCtx.putImageData(snap.imageData, 0, 0);
   Object.assign(state.adj, snap.adj);
@@ -704,6 +894,8 @@ function applyHistorySnap(index) {
   updateCanvasStyle();
   renderVignette();
   renderGrain();
+  renderDust();
+  renderLightLeaks();
   renderBkBlur();
   updateFilterUI();
   updateFileInfo();
@@ -713,6 +905,45 @@ function updateHistoryUI() {
   $('undoBtn').disabled = state.historyIndex <= 0;
   $('redoBtn').disabled = state.historyIndex >= state.history.length - 1;
   $('histCt').textContent = `${state.historyIndex + 1}/${state.history.length}`;
+
+  const list = $('visualHistoryList');
+  if (!list) return;
+  list.innerHTML = '';
+  
+  if (state.history.length === 0) {
+    list.innerHTML = '<p class="param-lbl" style="text-align:center; margin-top:20px;">No edits yet.</p>';
+    return;
+  }
+
+  // Render from newest to oldest for easy clicking
+  [...state.history].reverse().forEach((snap, reverseIndex) => {
+    const originalIndex = state.history.length - 1 - reverseIndex;
+    const isCurrent = originalIndex === state.historyIndex;
+    
+    // First snap is always labeled "Original"
+    let title = typeof snap.meta === 'string' ? snap.meta : 'Adjustment';
+    if (originalIndex === 0) title = 'Original Image';
+
+    const div = document.createElement('div');
+    div.className = `hist-item ${isCurrent ? 'active' : ''}`;
+    div.innerHTML = `
+      <img src="${snap.thumb || ''}" class="hist-thumb" alt="History thumnail" />
+      <div class="hist-info">
+        <span class="hist-name">${title}</span>
+        <span class="hist-time">${snap.time || ''}</span>
+      </div>
+    `;
+    div.onclick = () => {
+      // Allow jumping strictly if we aren't already on this snapshot
+      if (originalIndex !== state.historyIndex) {
+        state.historyIndex = originalIndex;
+        applyHistorySnap(originalIndex);
+        updateHistoryUI();
+        showToast('Jumped to ' + title);
+      }
+    };
+    list.appendChild(div);
+  });
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -745,6 +976,8 @@ function initAdjustments() {
         updateCanvasStyle();
         if (key === 'vignette') renderVignette();
         if (key === 'grain')    renderGrain();
+        if (key === 'dust')     renderDust();
+        if (key === 'lightLeaks') renderLightLeaks();
         if (key === 'bkBlur')  renderBkBlur();
       });
     });
@@ -759,6 +992,8 @@ function initAdjustments() {
       updateCanvasStyle();
       if (key === 'vignette') renderVignette();
       if (key === 'grain')    renderGrain();
+      if (key === 'dust')     renderDust();
+      if (key === 'lightLeaks') renderLightLeaks();
       if (key === 'bkBlur')  renderBkBlur();
       updateSliderFill(slider);
       saveHistory();
@@ -820,10 +1055,13 @@ function doFullReset() {
   state.activeFilter = 'Original';
   _lastEffectAdj    = null;
   _lastEffectFilter = null;
+  hideEffectNameBadge();
   updateAllSliders();
   updateCanvasStyle();
   renderVignette();
   renderGrain();
+  renderDust();
+  renderLightLeaks();
   renderBkBlur();
   updateFilterUI();
   saveHistory();
@@ -854,6 +1092,8 @@ function autoEnhance() {
   updateCanvasStyle();
   renderVignette();
   renderGrain();
+  renderDust();
+  renderLightLeaks();
   updateFilterUI();
   showToast('✨ Auto Enhanced — VSCO A6 style');
 }
@@ -865,11 +1105,55 @@ function initAutoEnhance() {
 
 // ─── Effects (one-click presets) ───
 
-function applyEffect(effect) {
+let _currentEffectObj = null;
+let _effectBadgeFadeTimer = null;
+let _effectBadgeHideTimer = null;
+
+function showEffectNameBadge(name, duration = 1500) {
+  const badge = $('effectNameBadge');
+  if (!badge || !name) return;
+
+  if (_effectBadgeFadeTimer) clearTimeout(_effectBadgeFadeTimer);
+  if (_effectBadgeHideTimer) clearTimeout(_effectBadgeHideTimer);
+
+  badge.textContent = name;
+  badge.classList.remove('hidden');
+  badge.classList.remove('visible');
+
+  requestAnimationFrame(() => {
+    badge.classList.add('visible');
+  });
+
+  _effectBadgeFadeTimer = setTimeout(() => {
+    badge.classList.remove('visible');
+  }, duration);
+
+  _effectBadgeHideTimer = setTimeout(() => {
+    badge.classList.add('hidden');
+  }, duration + 220);
+}
+
+function hideEffectNameBadge() {
+  const badge = $('effectNameBadge');
+  if (!badge) return;
+
+  if (_effectBadgeFadeTimer) clearTimeout(_effectBadgeFadeTimer);
+  if (_effectBadgeHideTimer) clearTimeout(_effectBadgeHideTimer);
+
+  badge.classList.remove('visible');
+  badge.classList.add('hidden');
+}
+
+function applyEffect(effect, amount = 1.0, options = {}) {
+  const opts = {
+    commitHistory: true,
+    syncAdjSliders: true,
+    showToast: true,
+    ...options,
+  };
+
   if (!state.image) { showToast('Load an image first'); return; }
 
-  // ─ Reset the PREVIOUS effect’s adj values before applying the new one
-  //   so effects don’t stack on top of each other.
   if (_lastEffectAdj) {
     Object.keys(_lastEffectAdj).forEach(key => { state.adj[key] = 0; });
   }
@@ -877,37 +1161,58 @@ function applyEffect(effect) {
     state.activeFilter = 'Original';
   }
 
-  // ─ Apply new effect
-  _lastEffectAdj    = effect.adj;
+  _currentEffectObj = effect;
+  _lastEffectAdj = {};
   _lastEffectFilter = effect.filter || null;
 
   Object.entries(effect.adj).forEach(([key, val]) => {
-    state.adj[key] = val;
-    const slider = document.querySelector(`input[data-adj="${key}"]`);
-    if (slider) {
-      slider.value = val;
-      const disp = slider.closest('.adj-row') && slider.closest('.adj-row').querySelector('.av');
-      if (disp) disp.textContent = val;
-      updateSliderFill(slider);
+    const finalVal = val * amount;
+    state.adj[key] = finalVal;
+    _lastEffectAdj[key] = finalVal;
+
+    if (opts.syncAdjSliders) {
+      const slider = document.querySelector(`input[data-adj="${key}"]`);
+      if (slider) {
+        slider.value = finalVal;
+        const disp = slider.closest('.adj-row') && slider.closest('.adj-row').querySelector('.av');
+        if (disp) disp.textContent = Math.round(finalVal);
+        updateSliderFill(slider);
+      }
     }
   });
 
   if (effect.filter) {
-    state.activeFilter = effect.filter;
+    state.activeFilter = amount > 0.05 ? effect.filter : 'Original';
     updateFilterUI();
   }
 
   updateCanvasStyle();
   renderVignette();
   renderGrain();
+  renderDust();
+  renderLightLeaks();
   renderBkBlur();
-  saveHistory();
-  showToast('✓ ' + effect.label);
+  if (opts.commitHistory) saveHistory();
+  if (opts.showToast && amount === 1.0) showEffectNameBadge(effect.label);
 
-  // Update active state on cards
   QA('.effect-card').forEach(c => c.classList.remove('active'));
   const activeCard = document.querySelector(`.effect-card[data-effect="${effect.name}"]`);
-  if (activeCard) activeCard.classList.add('active');
+  if (activeCard && amount > 0) activeCard.classList.add('active');
+
+  const intensityWrapper = document.getElementById('effectIntensityWrapper');
+  const intensitySlider = document.getElementById('effectIntensitySlider');
+  const intensityVal = document.getElementById('effectIntensityVal');
+  
+  if (intensityWrapper && intensitySlider && intensityVal) {
+    if (amount === 1.0) {
+      intensityWrapper.style.display = 'block';
+      intensitySlider.value = 100;
+      intensityVal.textContent = 100;
+      updateSliderFill(intensitySlider);
+    } else if (amount === 0) {
+      intensityWrapper.style.display = 'none';
+    }
+  }
 }
 
 function initEffects() {
@@ -921,14 +1226,20 @@ function initEffects() {
     professional: '🌟 Professional',
   };
 
-  // ─ Build HTML — preview bar (canvas + footer row) + effect cards ─
+  // ─ Build HTML — reset row, effect intensity slider, and the effect cards ─
   let html =
-    '<div class="eff-prev-bar">' +
-      '<canvas id="effPrevCv" class="eff-prev-cv"></canvas>' +
-      '<div class="eff-prev-footer">' +
-        '<span class="eff-prev-label" id="effPrevLabel">Hover / tap an effect to preview</span>' +
-        '<button class="eff-reset-btn" id="effResetBtn" title="Reset all effects">↺</button>' +
+    '<div class="tool-reset-row">' +
+      '<button class="btn-reset-tools" id="effResetBtn" title="Reset all effects">' +
+        '<svg viewBox="0 0 16 16"><path d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2v1z"/><path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466z"/></svg>' +
+        'Reset Effects' +
+      '</button>' +
+    '</div>' +
+    '<div class="adj-row" style="margin-top: 15px; margin-bottom: 25px; display: none;" id="effectIntensityWrapper">' +
+      '<div class="adj-header">' +
+        '<span class="al">Intensity</span>' +
+        '<span class="av" id="effectIntensityVal">100</span>' +
       '</div>' +
+      '<input type="range" id="effectIntensitySlider" min="0" max="100" value="100">' +
     '</div>';
 
   let lastGroup = null;
@@ -947,114 +1258,73 @@ function initEffects() {
   if (lastGroup !== null) html += '</div>';
   tab.innerHTML = html;
 
-  // ─ Preview canvas ─
-  const prevCv  = $('effPrevCv');
-  const prevCtx = prevCv.getContext('2d');
+  // Amount slider logic
+  const effectIntensityWrapper = $('effectIntensityWrapper');
+  const effectIntensitySlider = $('effectIntensitySlider');
+  const effectIntensityVal = $('effectIntensityVal');
+  let _effectIntensityRaf = 0;
 
-  // Resize the canvas backing store to match the container width × image aspect,
-  // scaled by DPR so pixels are 1:1 on any screen (Retina, OLED phone, etc.).
-  function _sizePrev() {
-    if (!state.image || !prevCv.parentElement) return false;
-    const DPR   = Math.min(window.devicePixelRatio || 1, 3);
-    const dispW = Math.max(prevCv.parentElement.clientWidth || 0, 160);
-    const ratio = mainCanvas.height / (mainCanvas.width || 1);
-    const dispH = Math.round(Math.min(Math.max(dispW * ratio, 60), 260));
+  if (effectIntensitySlider) {
+    effectIntensitySlider.addEventListener('input', (e) => {
+      const val = parseInt(e.target.value, 10);
+      if (effectIntensityVal) effectIntensityVal.textContent = val;
+      updateSliderFill(effectIntensitySlider);
+      if (_currentEffectObj) {
+        cancelAnimationFrame(_effectIntensityRaf);
+        _effectIntensityRaf = requestAnimationFrame(() => {
+          applyEffect(_currentEffectObj, val / 100, {
+            commitHistory: false,
+            syncAdjSliders: false,
+            showToast: false,
+          });
+        });
+      }
+    });
 
-    const realW = Math.round(dispW * DPR);
-    const realH = Math.round(dispH * DPR);
-
-    if (prevCv.width !== realW || prevCv.height !== realH) {
-      prevCv.width  = realW;
-      prevCv.height = realH;
-    }
-    prevCv.style.width  = dispW + 'px';
-    prevCv.style.height = dispH + 'px';
-
-    // Reset transform every frame so DPR scale is always correct
-    prevCtx.setTransform(DPR, 0, 0, DPR, 0, 0);
-    return { W: dispW, H: dispH };
+    // Commit a single history state once the user finishes dragging.
+    effectIntensitySlider.addEventListener('change', () => {
+      if (!_currentEffectObj) return;
+      const val = parseInt(effectIntensitySlider.value, 10) || 0;
+      applyEffect(_currentEffectObj, val / 100, {
+        commitHistory: true,
+        syncAdjSliders: true,
+        showToast: false,
+      });
+    });
   }
 
-  // ─ Shared bokeh-blur helper used by both preview and main render ─
-  // Returns an off-screen canvas with blurred edges and transparent centre (ellipse).
-  function _makeBkBlurLayer(srcCanvas, W, H, blurPx) {
-    const off  = document.createElement('canvas');
-    off.width  = W; off.height = H;
-    const oCtx = off.getContext('2d');
-    // Padding avoids gaussian blur clamping at the canvas boundary bleeding inward
-    const pad  = Math.ceil(blurPx * 3);
-    oCtx.filter = `blur(${blurPx.toFixed(1)}px)`;
-    oCtx.drawImage(srcCanvas, -pad, -pad, W + pad * 2, H + pad * 2);
-    oCtx.filter = 'none';
-    // Elliptical mask: centre is opaque (will be erased), edges transparent
-    const cx = W / 2, cy = H / 2;
-    const mCv  = document.createElement('canvas');
-    mCv.width  = W; mCv.height = H;
-    const mCtx = mCv.getContext('2d');
-    mCtx.translate(cx, cy);
-    mCtx.scale(W * 0.38, H * 0.46); // scale so radius-1 = ellipse semi-axes
-    const mg = mCtx.createRadialGradient(0, 0, 0, 0, 0, 1);
-    mg.addColorStop(0,    'rgba(0,0,0,1)');
-    mg.addColorStop(0.40, 'rgba(0,0,0,0.98)');
-    mg.addColorStop(0.70, 'rgba(0,0,0,0.45)');
-    mg.addColorStop(1,    'rgba(0,0,0,0)');
-    mCtx.fillStyle = mg;
-    mCtx.fillRect(-4, -4, 8, 8);
-    oCtx.globalCompositeOperation = 'destination-out';
-    oCtx.drawImage(mCv, 0, 0);
-    oCtx.globalCompositeOperation = 'source-over';
-    return off;
-  }
+  // ─ Live Preview on Main Canvas helpers ─
+  let _liveOriginalAdj = null;
+  let _liveOriginalFilter = null;
 
-  // ─ High-quality preview renderer ─
-  function _renderPreview(filterStr, bkBlurAmt, label) {
-    const dim = _sizePrev();
-    if (!dim) return;
-    const { W, H } = dim;
-    prevCtx.clearRect(0, 0, W, H);
-
-    const fs = filterStr && filterStr !== 'none' ? filterStr : 'none';
-    // Sharp base with colour grading
-    prevCtx.filter = fs;
-    prevCtx.drawImage(mainCanvas, 0, 0, W, H);
-    prevCtx.filter = 'none';
-
-    // Bokeh blur layer — only edges blurred, elliptical centre stays sharp
-    if (bkBlurAmt > 0) {
-      const blurPx = (bkBlurAmt / 100) * 16;
-      const colorOff = document.createElement('canvas');
-      colorOff.width  = W; colorOff.height = H;
-      const cCtx = colorOff.getContext('2d');
-      cCtx.filter = fs;
-      cCtx.drawImage(mainCanvas, 0, 0, W, H);
-      cCtx.filter = 'none';
-      const blurLayer = _makeBkBlurLayer(colorOff, W, H, blurPx);
-      prevCtx.drawImage(blurLayer, 0, 0);
-    }
-
-    const lbl = $('effPrevLabel');
-    if (lbl) lbl.textContent = label || 'Current state';
-  }
-
-  function _drawCurrentPreview() {
+  function _previewEffectOnMain(eff) {
     if (!state.image) return;
-    _renderPreview(_cachedFilterStr, state.adj.bkBlur || 0, 'Current state');
-  }
-
-  function _drawEffectPreview(eff) {
-    if (!state.image) return;
-    // Simulate final state WITHOUT actually applying the effect
-    const simAdj  = Object.assign({}, state.adj);
-    // Reset previously set effect adj (simulated), then apply new effect
+    if (!_liveOriginalAdj) {
+      _liveOriginalAdj = Object.assign({}, state.adj);
+      _liveOriginalFilter = state.activeFilter;
+    }
+    
+    // Simulate what applyEffect does, without committing to history or UI
+    const simAdj = Object.assign({}, _liveOriginalAdj);
     if (_lastEffectAdj) Object.keys(_lastEffectAdj).forEach(k => { simAdj[k] = 0; });
     Object.assign(simAdj, eff.adj);
-    const simFilter = eff.filter || (_lastEffectFilter ? 'Original' : state.activeFilter);
+    
+    const simFilter = eff.filter || (_lastEffectFilter ? 'Original' : _liveOriginalFilter);
     const fs = buildFilterString(simAdj, simFilter);
-    _renderPreview(fs, simAdj.bkBlur || 0, eff.label);
+    
+    // Apply fast to main canvas live
+    mainCanvas.style.filter = fs;
+    
+    // Optional: could render vignette/grain live here too, but CSS filter is instant and premium
   }
 
-  // Expose so loadImageFile can trigger a refresh after loading a new image
-  window._effPreviewRefresh = _drawCurrentPreview;
+  function _restoreMainCanvasPreview() {
+    if (!state.image || !_liveOriginalAdj) return;
+    const fs = buildFilterString(_liveOriginalAdj, _liveOriginalFilter);
+    mainCanvas.style.filter = fs;
+    _liveOriginalAdj = null;
+    _liveOriginalFilter = null;
+  }
 
   // ─ Reset button ─
   $('effResetBtn').addEventListener('click', () => {
@@ -1068,28 +1338,32 @@ function initEffects() {
       updateFilterUI();
       _lastEffectFilter = null;
     }
+    _currentEffectObj = null;
+    if (effectIntensityWrapper) effectIntensityWrapper.style.display = 'none';
+
     updateAllSliders();
     updateCanvasStyle();
     renderVignette();
     renderGrain();
     renderBkBlur();
+    hideEffectNameBadge();
     saveHistory();
     QA('.effect-card').forEach(c => c.classList.remove('active'));
     showToast('↺ Effects cleared');
-    requestAnimationFrame(_drawCurrentPreview);
   });
 
-  // ─ Desktop: hover = preview, leave = restore ─
+  // ─ Desktop: hover = live preview, leave = restore ─
   tab.addEventListener('mouseover', e => {
     const card = e.target.closest('.effect-card');
     if (!card) return;
     const eff = EFFECTS.find(f => f.name === card.dataset.effect);
-    if (eff) _drawEffectPreview(eff);
+    if (eff) _previewEffectOnMain(eff);
   });
-  tab.addEventListener('mouseleave', _drawCurrentPreview);
+  tab.addEventListener('mouseleave', () => {
+    _restoreMainCanvasPreview();
+  });
 
-  // ─ Mobile: touchstart = preview, tap = apply ─
-  // Track last touched card so a tap (touchend quick tap) applies the effect.
+  // ─ Mobile: touchstart = live preview, tap = apply ─
   let _touchPreviewEff = null;
   tab.addEventListener('touchstart', e => {
     const card = e.target.closest('.effect-card');
@@ -1097,27 +1371,34 @@ function initEffects() {
     const eff = EFFECTS.find(f => f.name === card.dataset.effect);
     if (!eff) return;
     _touchPreviewEff = eff;
-    _drawEffectPreview(eff);
+    _previewEffectOnMain(eff);
   }, { passive: true });
 
   tab.addEventListener('touchmove', e => {
     const touch = e.touches[0];
     const el = document.elementFromPoint(touch.clientX, touch.clientY);
     const card = el && el.closest('.effect-card');
-    if (!card) return;
+    if (!card) {
+      _restoreMainCanvasPreview();
+      _touchPreviewEff = null;
+      return;
+    }
     const eff = EFFECTS.find(f => f.name === card.dataset.effect);
     if (eff && eff !== _touchPreviewEff) {
       _touchPreviewEff = eff;
-      _drawEffectPreview(eff);
+      _previewEffectOnMain(eff);
     }
   }, { passive: true });
 
   tab.addEventListener('touchend', e => {
     const card = e.target.closest('.effect-card');
-    if (!card || !_touchPreviewEff) return;
+    if (!card || !_touchPreviewEff) {
+      _restoreMainCanvasPreview();
+      return;
+    }
     if (card.dataset.effect === _touchPreviewEff.name) {
-      applyEffect(_touchPreviewEff);
-      requestAnimationFrame(_drawCurrentPreview);
+      _restoreMainCanvasPreview(); // Clean up sim state
+      applyEffect(_touchPreviewEff, 1.0);
     }
     _touchPreviewEff = null;
   }, { passive: true });
@@ -1128,17 +1409,9 @@ function initEffects() {
     if (!card) return;
     const eff = EFFECTS.find(f => f.name === card.dataset.effect);
     if (!eff) return;
-    applyEffect(eff);
-    requestAnimationFrame(_drawCurrentPreview);
+    _restoreMainCanvasPreview(); // Clean up sim state before real apply
+    applyEffect(eff, 1.0);
   });
-
-  // ─ Refresh preview when this tab is freshly shown ─
-  document.querySelector('.tab[data-tab="effectsTab"]') &&
-    document.querySelector('.tab[data-tab="effectsTab"]').addEventListener('click', () => {
-      requestAnimationFrame(_drawCurrentPreview);
-    });
-
-  _drawCurrentPreview();
 }
 
 function updateAllSliders() {
@@ -1185,6 +1458,12 @@ function generateFilterThumbnails() {
   FILTERS.forEach(f => {
     // ── Group header + separator when group changes ──
     if (f.group && f.group !== lastGroup) {
+      const groupMeta = FILTER_GROUP_META[f.group] || {
+        heading: f.group,
+        badge: 'PRO',
+        title: 'Premium',
+      };
+
       // Strip: thin vertical divider between groups
       const sep = document.createElement('div');
       sep.className = 'filter-strip-sep';
@@ -1194,8 +1473,7 @@ function generateFilterThumbnails() {
       if (grid) {
         const hd = document.createElement('div');
         hd.className = 'filter-group-hd';
-        const groupLabel = f.group === 'vsco' ? 'VSCO Style' : 'Instagram';
-        hd.innerHTML = `<span>${groupLabel}</span><span class="fgh-badge">Premium</span>`;
+        hd.innerHTML = `<span>${groupMeta.heading}</span><span class="fgh-badge">${groupMeta.badge}</span>`;
         grid.appendChild(hd);
       }
       lastGroup = f.group;
@@ -1231,10 +1509,14 @@ function generateFilterThumbnails() {
 
       // Premium badge appended directly to item (not wrap) to avoid overflow:hidden clipping
       if (f.premium) {
+        const groupMeta = FILTER_GROUP_META[f.group] || {
+          badge: 'PRO',
+          title: 'Premium',
+        };
         const badge = document.createElement('span');
         badge.className = 'filter-prem-badge';
-        badge.innerHTML = '<svg width="7" height="7" viewBox="0 0 16 16" fill="currentColor"><path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/></svg> PRO';
-        badge.title = f.group === 'vsco' ? 'VSCO Style' : 'Instagram Style';
+        badge.innerHTML = `<svg width="7" height="7" viewBox="0 0 16 16" fill="currentColor"><path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/></svg> ${groupMeta.badge}`;
+        badge.title = groupMeta.title;
         item.appendChild(badge);
       }
 
@@ -1266,9 +1548,9 @@ function applyFilter(name) {
   saveHistory();
   const f = FILTERS.find(f => f.name === name);
   const displayName = f && f.label
-    ? f.label.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim()   // strip emoji for toast
+    ? f.label.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim()
     : name.replace(/_[A-Z]+$/, '').replace(/([A-Z])/g, ' $1').trim();
-  showToast('✓ ' + displayName);
+  showEffectNameBadge(displayName);
 }
 
 function updateFilterUI() {
@@ -2908,7 +3190,12 @@ function initKeyboard() {
 // ═══════════════════════════════════════════════════════════
 
 function initUI() {
-  // intentionally empty — Auto Enhance is wired in ai-enhance.js
+  const topResetBtn = $('resetTopBtn');
+  if (topResetBtn) {
+    topResetBtn.addEventListener('click', () => {
+      doFullReset();
+    });
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -2970,29 +3257,51 @@ async function copyToClipboard() {
 // ═══════════════════════════════════════════════════════════
 
 function initBeforeAfter() {
-  // Hold backtick (`) to see the unprocessed canvas; release to restore all effects.
+  // Hold backtick (`) or press the Compare button to see the unprocessed canvas.
   // Works for CSS-filter adjustments, presets, and vignette/grain overlays.
   let _baActive = false;
 
-  document.addEventListener('keydown', e => {
-    if (e.key !== '`' || _baActive || !state.image) return;
-    const tag = e.target.tagName.toLowerCase();
-    if (['input', 'textarea', 'select'].includes(tag)) return;
+  const startCompare = () => {
+    if (_baActive || !state.image) return;
     _baActive = true;
     mainCanvas.style.filter   = 'none';
     vigCanvas.style.opacity   = '0';
     grainCanvas.style.opacity = '0';
-    showToast('👁 Before — release ` to compare');
+    showToast('👁 Original image view');
+  };
+
+  const endCompare = () => {
+    if (!_baActive) return;
+    _baActive = false;
+    mainCanvas.style.filter   = _cachedFilterStr;
+    renderVignette();
+    renderGrain();
+  };
+
+  // Keyboard
+  document.addEventListener('keydown', e => {
+    if (e.key !== '`') return;
+    const tag = e.target.tagName.toLowerCase();
+    if (['input', 'textarea', 'select'].includes(tag)) return;
+    startCompare();
   });
 
   document.addEventListener('keyup', e => {
-    if (e.key !== '`' || !_baActive) return;
-    _baActive = false;
-    mainCanvas.style.filter   = _cachedFilterStr;
-    // Re-render overlays to restore their proper opacity/content
-    renderVignette();
-    renderGrain();
+    if (e.key === '`') endCompare();
   });
+
+  // UI Button
+  const btn = $('compareBtn');
+  if (btn) {
+    btn.addEventListener('mousedown', startCompare);
+    btn.addEventListener('touchstart', (e) => { e.preventDefault(); startCompare(); }, { passive: false });
+    
+    // Release
+    btn.addEventListener('mouseup', endCompare);
+    btn.addEventListener('mouseleave', endCompare);
+    btn.addEventListener('touchend', (e) => { e.preventDefault(); endCompare(); }, { passive: false });
+    btn.addEventListener('touchcancel', endCompare);
+  }
 }
 
 function initTheme() {
@@ -3070,6 +3379,53 @@ function initMobile() {
   $('closeRPanel') && $('closeRPanel').addEventListener('click', e => { e.preventDefault(); closeAll(); });
 
   overlay && overlay.addEventListener('click', closeAll);
+
+  // Swipe gestures: make drawers feel native on mobile.
+  if (leftPanel) {
+    let startX = 0;
+    let startY = 0;
+    leftPanel.addEventListener('touchstart', (e) => {
+      if (!isMobile() || !leftPanel.classList.contains('open')) return;
+      const t = e.touches[0];
+      startX = t.clientX;
+      startY = t.clientY;
+    }, { passive: true });
+
+    leftPanel.addEventListener('touchend', (e) => {
+      if (!isMobile() || !leftPanel.classList.contains('open')) return;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - startX;
+      const dy = Math.abs(t.clientY - startY);
+      // Horizontal left swipe closes tools drawer.
+      if (dx < -48 && dy < 42) closeAll();
+    }, { passive: true });
+  }
+
+  if (rightPanel) {
+    let startX = 0;
+    let startY = 0;
+    let fromGrabZone = false;
+
+    rightPanel.addEventListener('touchstart', (e) => {
+      if (!isMobile() || !rightPanel.classList.contains('open')) return;
+      const t = e.touches[0];
+      const panelRect = rightPanel.getBoundingClientRect();
+      // Only start close-swipe if gesture begins near top grab area.
+      fromGrabZone = (t.clientY - panelRect.top) <= 48;
+      startX = t.clientX;
+      startY = t.clientY;
+    }, { passive: true });
+
+    rightPanel.addEventListener('touchend', (e) => {
+      if (!isMobile() || !rightPanel.classList.contains('open') || !fromGrabZone) return;
+      const t = e.changedTouches[0];
+      const dy = t.clientY - startY;
+      const dx = Math.abs(t.clientX - startX);
+      // Vertical downward swipe from top closes adjustments sheet.
+      if (dy > 56 && dx < 56) closeAll();
+      fromGrabZone = false;
+    }, { passive: true });
+  }
 
   // Fallback: close drawers when tapping outside controls/panels.
   document.addEventListener('click', e => {
@@ -3187,26 +3543,26 @@ function initMobilePreview() {
   document.addEventListener('input', e => {
     if (!state.image || window.innerWidth > 767) return;
     if (e.target.type === 'range' || e.target.classList.contains('slider')) {
-      requestAnimationFrame(showMobilePreview);
+      requestAnimationFrame(() => showMobilePreview(1400));
     }
   });
 
-  // Trigger preview when a filter preset is tapped
+  // Trigger preview when a filter/effect card is tapped
   document.addEventListener('click', e => {
     if (!state.image || window.innerWidth > 767) return;
-    if (e.target.closest('.filter-thumb')) {
-      // Small delay so filter state is applied first
-      setTimeout(showMobilePreview, 80);
+    if (e.target.closest('.filter-thumb') || e.target.closest('.effect-card')) {
+      // Small delay so filter/effect state is applied first
+      setTimeout(() => showMobilePreview(650), 80);
     }
   });
 
   // Also fire when a new image is loaded on mobile
   document.addEventListener('lux:imageLoaded', () => {
-    if (window.innerWidth <= 767) showMobilePreview();
+    if (window.innerWidth <= 767) showMobilePreview(1200);
   });
 }
 
-function showMobilePreview() {
+function showMobilePreview(hideDelay = 1200) {
   const previewEl = $('mobilePreview');
   const previewCv = $('previewCanvas');
   if (!previewEl || !previewCv || !state.image) return;
@@ -3236,11 +3592,11 @@ function showMobilePreview() {
 
   previewEl.classList.remove('hidden');
 
-  // Auto-hide after 2.8 s of inactivity
+  // Auto-hide quickly after interactions to avoid blocking canvas view
   clearTimeout(previewHideTimer);
   previewHideTimer = setTimeout(() => {
     previewEl.classList.add('hidden');
-  }, 2800);
+  }, hideDelay);
 }
 
 // ─── Expose subset of API for ai-enhance.js ───
