@@ -1,61 +1,57 @@
-<img width="1200" height="630" alt="lux_banner_premium" src="https://github.com/user-attachments/assets/e18b74e4-7f63-4a33-bfd5-d4829d7e25f4" />
-
 # LuxEditor
 
-LuxEditor is a **modern browser-based photo editor** that allows users to quickly edit images directly in their browser.
-It provides simple tools like cropping, rotation, brush drawing, text overlay, and color adjustments.
+LuxEditor is a premium, offline-first photo editor that runs fully in your browser.
+No uploads are required: your image edits stay local on your device.
 
-## 🚀 Live Demo
+## Live Demo
 
 https://luxeditor.vercel.app/
 
-## ✨ Features
+## Features
 
-* Upload and edit photos instantly
-* Crop and rotate images
-* Brush drawing tool
-* Add text to images
-* Adjust exposure, contrast, and saturation
-* Export edited images as **JPG, PNG, or WEBP**
-* Clean and responsive UI
+- Fast local image loading (drag/drop, file picker, clipboard paste)
+- Professional adjustment controls (light, color, detail, effects)
+- Preset filters and one-click effect stacks
+- Crop, rotate, flip, brush/eraser, and text overlays
+- Before/after compare and edit history (undo/redo)
+- Export to JPG, PNG, and WEBP with resize and quality controls
+- Responsive desktop and mobile editing experience
 
-## 🛠️ Technologies Used
+## Tech Stack
 
-* HTML
-* CSS
-* JavaScript
-* Vercel (Deployment)
+- HTML5
+- CSS3
+- Vanilla JavaScript (ES6)
+- Canvas API
+- Vercel (deployment + security headers)
 
-## 📂 Project Structure
+## Project Structure
 
 ```
 LuxEditor
- ├── index.html
- ├── style.css
- ├── script.js
- └── assets/
+|- index.html
+|- styles.css
+|- app.js
+|- manifest.json
+|- vercel.json
+|- package.json
+`- README.md
 ```
 
-## 📦 Installation
+## Local Run
 
-Clone the repository:
+1. Clone the repository.
+2. Open the project folder.
+3. Start a local static server (recommended) or open index.html directly.
 
-```
-git clone https://github.com/ShubhamNale1008/LuxEditor.git
-```
+Example with VS Code Live Server works out of the box.
 
-Open the project folder and run `index.html` in your browser.
+## Author
 
-## 🌐 Deployment
-
-This project is deployed using **Vercel**.
-
-## 👨‍💻 Author
-
-**Shubham Rajendra Nale**
+Shubham Rajendra Nale
 
 GitHub: https://github.com/ShubhamNale1008
 
-## 📜 License
+## License
 
 This project is open source and available under the MIT License.

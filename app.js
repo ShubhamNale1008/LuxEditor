@@ -196,6 +196,10 @@ const state = {
   // Theme
   theme: 'dark',
 
+  // Increments whenever base pixels on mainCanvas change.
+  // Used to skip redundant expensive overlay recomputation.
+  canvasRevision: 0,
+
   // Export
   exportFormat:  'jpeg',
   exportQuality: 0.9,
@@ -219,6 +223,26 @@ let bkBlurCanvas, bkBlurCtx;
 // so we can reset them when the user switches to a different effect.
 let _lastEffectAdj    = null;
 let _lastEffectFilter = null;
+
+// Overlay render signatures to avoid recomputing identical frames.
+const _overlaySig = {
+  vignette: '',
+  grain: '',
+  dust: '',
+  leak: '',
+  bkBlur: '',
+};
+
+let _grainTileCanvas = null;
+let _grainTileCtx = null;
+let _bkMaskCanvas = null;
+let _bkMaskCtx = null;
+let _bkWorkCanvas = null;
+let _bkWorkCtx = null;
+
+function bumpCanvasRevision() {
+  state.canvasRevision = (state.canvasRevision + 1) % 1000000000;
+}
 
 // ─────────────────────── INIT ───────────────────────
 
@@ -396,6 +420,7 @@ function renderFromImage() {
   // Draw image scaled to canvas size (handles downscaled mobile canvas)
   mainCtx.drawImage(state.image, -W / 2, -H / 2, W, H);
   mainCtx.restore();
+  bumpCanvasRevision();
   updateCanvasStyle();
 }
 
@@ -510,6 +535,13 @@ function renderVignette() {
   const W = vigCanvas.width, H = vigCanvas.height;
   const amount = state.adj.vignette;
 
+  const sig = `${W}x${H}|${amount}`;
+  if (sig === _overlaySig.vignette) {
+    vigCanvas.style.opacity = amount === 0 ? '0' : '1';
+    return;
+  }
+  _overlaySig.vignette = sig;
+
   vigCtx.clearRect(0, 0, W, H);
 
   if (amount === 0) { vigCanvas.style.opacity = '0'; return; }
@@ -530,16 +562,35 @@ function renderGrain() {
   if (!mainCanvas.width) return;
   const amount = state.adj.grain;
 
+  const W = grainCanvas.width, H = grainCanvas.height;
+  const sig = `${W}x${H}|${amount}`;
+  if (sig === _overlaySig.grain) {
+    grainCanvas.style.opacity = amount === 0 ? '0' : '1';
+    grainCanvas.style.mixBlendMode = 'overlay';
+    return;
+  }
+  _overlaySig.grain = sig;
+
   if (amount === 0) { grainCanvas.style.opacity = '0'; return; }
 
   grainCanvas.style.opacity = '1';
   grainCanvas.style.mixBlendMode = 'overlay';
 
-  const W = grainCanvas.width, H = grainCanvas.height;
-  // On mobile, use a smaller grain tile and scale it up to save memory/CPU
-  const tW = IS_MOBILE ? Math.min(W, 256) : W;
-  const tH = IS_MOBILE ? Math.min(H, 256) : H;
-  const imageData = grainCtx.createImageData(tW, tH);
+  if (!_grainTileCanvas) {
+    _grainTileCanvas = document.createElement('canvas');
+    _grainTileCtx = _grainTileCanvas.getContext('2d');
+  }
+
+  // Repeating tile keeps CPU stable even for very large images.
+  const tileSize = IS_MOBILE ? 128 : 192;
+  const tW = Math.min(W, tileSize);
+  const tH = Math.min(H, tileSize);
+  if (_grainTileCanvas.width !== tW || _grainTileCanvas.height !== tH) {
+    _grainTileCanvas.width = tW;
+    _grainTileCanvas.height = tH;
+  }
+
+  const imageData = _grainTileCtx.createImageData(tW, tH);
   const data = imageData.data;
   const intensity = (amount / 100) * 55;
 
@@ -548,10 +599,12 @@ function renderGrain() {
     data[i] = data[i + 1] = data[i + 2] = 128 + n;
     data[i + 3] = Math.min(255, Math.abs(n) * 3);
   }
-  grainCtx.putImageData(imageData, 0, 0);
-  // Scale the grain tile to full canvas on mobile
-  if (IS_MOBILE && (tW < W || tH < H)) {
-    grainCtx.drawImage(grainCanvas, 0, 0, tW, tH, 0, 0, W, H);
+  _grainTileCtx.putImageData(imageData, 0, 0);
+  grainCtx.clearRect(0, 0, W, H);
+  const pattern = grainCtx.createPattern(_grainTileCanvas, 'repeat');
+  if (pattern) {
+    grainCtx.fillStyle = pattern;
+    grainCtx.fillRect(0, 0, W, H);
   }
 }
 
@@ -561,6 +614,14 @@ function renderDust() {
   if (!mainCanvas.width) return;
   const W = dustCanvas.width, H = dustCanvas.height;
   const amount = state.adj.dust;
+
+  const sig = `${W}x${H}|${amount}`;
+  if (sig === _overlaySig.dust) {
+    dustCanvas.style.opacity = amount === 0 ? '0' : '1';
+    dustCanvas.style.mixBlendMode = 'screen';
+    return;
+  }
+  _overlaySig.dust = sig;
   
   dustCtx.clearRect(0, 0, W, H);
   if (amount === 0) { dustCanvas.style.opacity = '0'; return; }
@@ -596,6 +657,14 @@ function renderLightLeaks() {
   if (!mainCanvas.width) return;
   const W = leakCanvas.width, H = leakCanvas.height;
   const amount = state.adj.lightLeaks;
+
+  const sig = `${W}x${H}|${amount}`;
+  if (sig === _overlaySig.leak) {
+    leakCanvas.style.opacity = amount === 0 ? '0' : '1';
+    leakCanvas.style.mixBlendMode = 'screen';
+    return;
+  }
+  _overlaySig.leak = sig;
   
   leakCtx.clearRect(0, 0, W, H);
   if (amount === 0) { leakCanvas.style.opacity = '0'; return; }
@@ -618,52 +687,72 @@ function renderBkBlur() {
   const W = bkBlurCanvas.width, H = bkBlurCanvas.height;
   const amount = state.adj.bkBlur || 0;
 
+  const sig = `${W}x${H}|${amount}|${state.canvasRevision}`;
+  if (sig === _overlaySig.bkBlur) {
+    bkBlurCanvas.style.opacity = amount === 0 ? '0' : '1';
+    return;
+  }
+  _overlaySig.bkBlur = sig;
+
   bkBlurCtx.clearRect(0, 0, W, H);
 
   if (amount === 0) { bkBlurCanvas.style.opacity = '0'; return; }
 
   const blurPx = (amount / 100) * 30;
 
-  // ─ Step 1: draw blurred image into an offscreen canvas.
-  //   Draw padded (image overflows canvas bounds) so the gaussian blur doesn't
-  //   clamp at the canvas edge and bleed inward to the centre.
-  const off  = document.createElement('canvas');
-  off.width  = W; off.height = H;
-  const oCtx = off.getContext('2d');
+  if (!_bkMaskCanvas) {
+    _bkMaskCanvas = document.createElement('canvas');
+    _bkMaskCtx = _bkMaskCanvas.getContext('2d');
+  }
+  if (!_bkWorkCanvas) {
+    _bkWorkCanvas = document.createElement('canvas');
+    _bkWorkCtx = _bkWorkCanvas.getContext('2d');
+  }
+
+  if (_bkMaskCanvas.width !== W || _bkMaskCanvas.height !== H) {
+    _bkMaskCanvas.width = W;
+    _bkMaskCanvas.height = H;
+
+    const cx = W / 2;
+    const cy = H / 2;
+    const rx = W * 0.38;
+    const ry = H * 0.46;
+
+    _bkMaskCtx.clearRect(0, 0, W, H);
+    _bkMaskCtx.save();
+    _bkMaskCtx.translate(cx, cy);
+    _bkMaskCtx.scale(rx, ry);
+    const mg = _bkMaskCtx.createRadialGradient(0, 0, 0, 0, 0, 1);
+    mg.addColorStop(0, 'rgba(0,0,0,1)');
+    mg.addColorStop(0.40, 'rgba(0,0,0,0.98)');
+    mg.addColorStop(0.70, 'rgba(0,0,0,0.45)');
+    mg.addColorStop(1, 'rgba(0,0,0,0)');
+    _bkMaskCtx.fillStyle = mg;
+    _bkMaskCtx.fillRect(-4, -4, 8, 8);
+    _bkMaskCtx.restore();
+  }
+
+  if (_bkWorkCanvas.width !== W || _bkWorkCanvas.height !== H) {
+    _bkWorkCanvas.width = W;
+    _bkWorkCanvas.height = H;
+  }
+
+  // ─ Step 1: draw blurred image into reusable offscreen canvas.
+  //   Draw padded (image overflows canvas bounds) so gaussian blur doesn't
+  //   clamp at edges and bleed inward to the subject area.
   const pad  = Math.ceil(blurPx * 3);
-  oCtx.filter = `blur(${blurPx.toFixed(1)}px)`;
-  oCtx.drawImage(mainCanvas, -pad, -pad, W + pad * 2, H + pad * 2);
-  oCtx.filter = 'none';
+  _bkWorkCtx.clearRect(0, 0, W, H);
+  _bkWorkCtx.filter = `blur(${blurPx.toFixed(1)}px)`;
+  _bkWorkCtx.drawImage(mainCanvas, -pad, -pad, W + pad * 2, H + pad * 2);
+  _bkWorkCtx.filter = 'none';
 
-  // ─ Step 2: build an elliptical alpha mask that is OPAQUE at the center
-  //   and TRANSPARENT at the outer edges.
-  //   Applying this with destination-out erases the centre of the blurred layer,
-  //   revealing the sharp mainCanvas beneath — creating a true bokeh effect.
-  const cx = W / 2, cy = H / 2;
-  const rx  = W * 0.38; // horizontal semi-axis of the subject / sharp zone
-  const ry  = H * 0.46; // vertical semi-axis
-
-  const mCv  = document.createElement('canvas');
-  mCv.width  = W; mCv.height = H;
-  const mCtx = mCv.getContext('2d');
-  // Scale context so 1 unit = semi-axis length → radialGradient(radius=1) is an ellipse
-  mCtx.translate(cx, cy);
-  mCtx.scale(rx, ry);
-  const mg = mCtx.createRadialGradient(0, 0, 0, 0, 0, 1);
-  mg.addColorStop(0,    'rgba(0,0,0,1)');   // erase centre completely
-  mg.addColorStop(0.40, 'rgba(0,0,0,0.98)');
-  mg.addColorStop(0.70, 'rgba(0,0,0,0.45)');
-  mg.addColorStop(1,    'rgba(0,0,0,0)');   // no erase — full blur at outer rim
-  mCtx.fillStyle = mg;
-  mCtx.fillRect(-4, -4, 8, 8); // covers whole canvas in scaled-unit space
-
-  // Erase the centre of the blurred layer using the elliptical mask
-  oCtx.globalCompositeOperation = 'destination-out';
-  oCtx.drawImage(mCv, 0, 0);
-  oCtx.globalCompositeOperation = 'source-over';
+  // Erase the center of the blurred layer using cached elliptical mask.
+  _bkWorkCtx.globalCompositeOperation = 'destination-out';
+  _bkWorkCtx.drawImage(_bkMaskCanvas, 0, 0);
+  _bkWorkCtx.globalCompositeOperation = 'source-over';
 
   // ─ Step 3: composite the blurred-periphery layer onto the overlay canvas
-  bkBlurCtx.drawImage(off, 0, 0);
+  bkBlurCtx.drawImage(_bkWorkCanvas, 0, 0);
   bkBlurCanvas.style.opacity = '1';
 }
 
@@ -885,6 +974,7 @@ function applyHistorySnap(index) {
   mainCanvas.height = vigCanvas.height = grainCanvas.height = dustCanvas.height = leakCanvas.height = bkBlurCanvas.height = snap.canvasH;
 
   mainCtx.putImageData(snap.imageData, 0, 0);
+  bumpCanvasRevision();
   Object.assign(state.adj, snap.adj);
   state.activeFilter = snap.activeFilter;
   state.flipH        = snap.flipH;
@@ -927,7 +1017,7 @@ function updateHistoryUI() {
     const div = document.createElement('div');
     div.className = `hist-item ${isCurrent ? 'active' : ''}`;
     div.innerHTML = `
-      <img src="${snap.thumb || ''}" class="hist-thumb" alt="History thumnail" />
+      <img src="${snap.thumb || ''}" class="hist-thumb" alt="History thumbnail" />
       <div class="hist-info">
         <span class="hist-name">${title}</span>
         <span class="hist-time">${snap.time || ''}</span>
@@ -1779,9 +1869,10 @@ function applyCrop() {
   tmp.width  = iw; tmp.height = ih;
   tmp.getContext('2d').drawImage(mainCanvas, Math.round(x), Math.round(y), iw, ih, 0, 0, iw, ih);
 
-  mainCanvas.width  = vigCanvas.width  = grainCanvas.width  = iw;
-  mainCanvas.height = vigCanvas.height = grainCanvas.height = ih;
+  mainCanvas.width  = vigCanvas.width  = grainCanvas.width  = dustCanvas.width = leakCanvas.width = bkBlurCanvas.width  = iw;
+  mainCanvas.height = vigCanvas.height = grainCanvas.height = dustCanvas.height = leakCanvas.height = bkBlurCanvas.height = ih;
   mainCtx.drawImage(tmp, 0, 0);
+  bumpCanvasRevision();
 
   state.imageWidth = iw; state.imageHeight = ih;
 
@@ -1826,9 +1917,10 @@ function bakeRotate(deg) {
   tCtx.rotate(rad);
   tCtx.drawImage(mainCanvas, -W / 2, -H / 2);
 
-  mainCanvas.width  = vigCanvas.width  = grainCanvas.width  = newW;
-  mainCanvas.height = vigCanvas.height = grainCanvas.height = newH;
+  mainCanvas.width  = vigCanvas.width  = grainCanvas.width  = dustCanvas.width = leakCanvas.width = bkBlurCanvas.width  = newW;
+  mainCanvas.height = vigCanvas.height = grainCanvas.height = dustCanvas.height = leakCanvas.height = bkBlurCanvas.height = newH;
   mainCtx.drawImage(tmp, 0, 0);
+  bumpCanvasRevision();
 
   state.imageWidth = newW; state.imageHeight = newH;
   fitToScreen();
@@ -1844,16 +1936,29 @@ function bakeRotate(deg) {
 // ═══════════════════════════════════════════════════════════
 
 function initCanvasHover() {
-  // Show pixel colour in RGB chip on mouse hover (desktop only)
-  mainCanvas.addEventListener('mousemove', e => {
-    if (!state.image) return;
-    const pos = getCanvasPos(e);
+  let hoverRaf = 0;
+  let lastEvent = null;
+
+  const updateHoverColor = () => {
+    hoverRaf = 0;
+    if (!lastEvent || !state.image || state.isDrawing) return;
+
+    const pos = getCanvasPos(lastEvent);
     if (pos.x < 0 || pos.y < 0 || pos.x >= mainCanvas.width || pos.y >= mainCanvas.height) return;
+
     try {
       const px = mainCtx.getImageData(Math.round(pos.x), Math.round(pos.y), 1, 1).data;
       const hex = '#' + [px[0], px[1], px[2]].map(v => v.toString(16).padStart(2, '0')).join('');
       $('statusColor').textContent = hex.toUpperCase() + '  ·  RGB ' + px[0] + ',' + px[1] + ',' + px[2];
     } catch (_) {}
+  };
+
+  // Show pixel colour in RGB chip on mouse hover (desktop only)
+  mainCanvas.addEventListener('mousemove', e => {
+    if (!state.image) return;
+    lastEvent = e;
+    if (hoverRaf) return;
+    hoverRaf = requestAnimationFrame(updateHoverColor);
   });
 }
 
@@ -1920,6 +2025,7 @@ function endBrush() {
   if (!state.isDrawing) return;
   state.isDrawing    = false;
   state.currentStroke = null;
+  bumpCanvasRevision();
   saveHistory();
 }
 
@@ -2827,6 +2933,7 @@ function _commitTextOverlay() {
     _applyCanvasTextEffect(mainCtx, effectId, color, fontSize, canvasX, canvasY + i * lineH, lineH, align, line, innerW, colorSettings);
   });
   mainCtx.restore();
+  bumpCanvasRevision();
 
   const stampMeta = {
     text,
