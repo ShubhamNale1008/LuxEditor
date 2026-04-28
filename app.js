@@ -26,6 +26,7 @@ const FILTERS = [
   // ── VSCO-Style (Premium) ──
   { name: 'A4',          label: 'A4',          css: 'sepia(0.2) contrast(0.9) brightness(1.05) saturate(0.85)',                          group: 'vsco', premium: true },
   { name: 'A6',          label: 'A6',          css: 'sepia(0.15) brightness(1.08) contrast(0.95) saturate(0.92)',                        group: 'vsco', premium: true },
+  { name: 'BestMatch',   label: 'Best Match',   css: '__VSCO_BEST__',                                                                       group: 'vsco', premium: true },
   { name: 'C1',          label: 'C1',          css: 'hue-rotate(195deg) saturate(1.1) brightness(1.1) contrast(0.9)',                    group: 'vsco', premium: true },
   { name: 'F2',          label: 'F2',          css: 'sepia(0.35) saturate(1.5) brightness(1.1) hue-rotate(-8deg)',                       group: 'vsco', premium: true },
   { name: 'HB2',         label: 'HB2',         css: 'grayscale(1) contrast(1.42) brightness(0.94)',                                      group: 'vsco', premium: true },
@@ -86,6 +87,12 @@ const FILTER_GROUP_META = {
   },
 };
 
+const _adaptiveVscoCache = {
+  key: '',
+  name: 'A6',
+};
+
+let _filterThumbRenderToken = 0;
 // ─────────────────────── EFFECTS (One-Click Presets) ───────────────────────
 
 const EFFECTS = [
@@ -243,7 +250,6 @@ let _bkWorkCtx = null;
 function bumpCanvasRevision() {
   state.canvasRevision = (state.canvasRevision + 1) % 1000000000;
 }
-
 // ─────────────────────── INIT ───────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -276,6 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initAutoEnhance();
   initEffects();
   initUI();
+  initFooterActions();
   initTheme();
   initMobile();
   initMobilePreview();
@@ -523,9 +530,85 @@ function buildFilterString(adjOverride, filterOverride) {
 
   // Preset filter
   const preset = FILTERS.find(f => f.name === activeFilterName);
-  if (preset && preset.css) parts.push(preset.css);
+  const presetCss = resolvePresetCss(preset);
+  if (presetCss) parts.push(presetCss);
 
   return parts.length ? parts.join(' ') : 'none';
+}
+
+function resolvePresetCss(preset) {
+  if (!preset) return '';
+  if (preset.css === '__VSCO_BEST__') return getAdaptiveVscoFilterCss();
+  return preset.css || '';
+}
+
+function getAdaptiveVscoFilterName() {
+  const key = `${state.canvasRevision}|${state.imageWidth}|${state.imageHeight}`;
+  if (_adaptiveVscoCache.key === key) return _adaptiveVscoCache.name;
+
+  let chosen = 'A6';
+  if (!state.image || !state.imageWidth || !state.imageHeight) {
+    _adaptiveVscoCache.key = key;
+    _adaptiveVscoCache.name = chosen;
+    return chosen;
+  }
+
+  const sampleSize = 24;
+  const sample = document.createElement('canvas');
+  sample.width = sample.height = sampleSize;
+  const ctx = sample.getContext('2d', { willReadFrequently: true });
+
+  if (!ctx) {
+    _adaptiveVscoCache.key = key;
+    _adaptiveVscoCache.name = chosen;
+    return chosen;
+  }
+
+  try {
+    ctx.drawImage(state.image, 0, 0, sampleSize, sampleSize);
+    const { data } = ctx.getImageData(0, 0, sampleSize, sampleSize);
+    let lumSum = 0;
+    let satSum = 0;
+    let warmSum = 0;
+    let coolSum = 0;
+
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i] / 255;
+      const g = data[i + 1] / 255;
+      const b = data[i + 2] / 255;
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      lumSum += 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      satSum += max > 0 ? (max - min) / max : 0;
+      warmSum += r - b;
+      coolSum += b - r;
+    }
+
+    const pixels = data.length / 4;
+    const luminance = lumSum / pixels;
+    const saturation = satSum / pixels;
+    const warmth = warmSum / pixels;
+    const coolness = coolSum / pixels;
+
+    if (luminance < 0.34) chosen = 'HB2';
+    else if (saturation < 0.16) chosen = 'P5';
+    else if (warmth > 0.08) chosen = 'F2';
+    else if (coolness > 0.08) chosen = 'C1';
+    else if (luminance > 0.72) chosen = 'A6';
+    else chosen = 'A6';
+  } catch (_) {
+    chosen = 'A6';
+  }
+
+  _adaptiveVscoCache.key = key;
+  _adaptiveVscoCache.name = chosen;
+  return chosen;
+}
+
+function getAdaptiveVscoFilterCss() {
+  const bestName = getAdaptiveVscoFilterName();
+  const bestPreset = FILTERS.find(f => f.name === bestName);
+  return bestPreset ? (bestPreset.css || '') : '';
 }
 
 // ─── Overlays ───
@@ -1160,32 +1243,130 @@ function doFullReset() {
 
 // ───────────────────────── AUTO ENHANCE ─────────────────────────
 
-function autoEnhance() {
+async function autoEnhance() {
   if (!state.image) { showToast('Load an image first'); return; }
   saveHistory();
-  // VSCO-inspired smart defaults: lift shadows, recover highlights,
-  // add clarity + warmth, and apply the A6 preset (subtle warm film look)
+  resetAdjState();
+
+  const loadingStartedAt = performance.now();
+  showLoading(true);
+  await new Promise(requestAnimationFrame);
+
+  // Fixed AI Enhance look so every photo gets the same result.
   state.adj.exposure    = 8;
-  state.adj.contrast    = 12;
-  state.adj.highlights  = -15;
-  state.adj.shadows     = 20;
-  state.adj.whites      = 5;
-  state.adj.blacks      = -5;
-  state.adj.saturation  = 15;
-  state.adj.vibrance    = 22;
-  state.adj.clarity     = 25;
-  state.adj.temperature = 6;
-  state.adj.sharpness   = 18;
-  state.adj.dehaze      = 8;
-  state.activeFilter    = 'A6';
-  updateAllSliders();
+  state.adj.brightness  = 8;
+  state.adj.contrast    = 14;
+  state.adj.highlights  = -48;
+  state.adj.shadows     = 4;
+  state.adj.whites      = -25;
+  state.adj.blacks      = -80;
+  state.adj.saturation  = -10;
+  state.adj.vibrance    = 30;
+  state.adj.temperature = -20;
+  state.adj.tint        = 2;
+  state.adj.sharpness   = 6;
+  state.adj.clarity     = 2;
+  state.adj.noiseReduction = 80;
+  state.activeFilter    = 'Original';
   updateCanvasStyle();
   renderVignette();
   renderGrain();
   renderDust();
   renderLightLeaks();
+  renderBkBlur();
   updateFilterUI();
-  showToast('✨ Auto Enhanced — VSCO A6 style');
+  showToast('✨ AI Enhanced');
+
+  const elapsed = performance.now() - loadingStartedAt;
+  const remaining = Math.max(0, 2000 - elapsed);
+  await new Promise(resolve => setTimeout(resolve, remaining));
+  showLoading(false);
+}
+
+function analyzeImageMood(image) {
+  const sampleSize = 28;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = sampleSize;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+  const defaults = {
+    luminance: 0.5,
+    contrast: 0.5,
+    saturation: 0.35,
+    warmthBias: 0,
+    flatness: 0.35,
+    brightnessSpike: 0.5,
+    texture: 0.5,
+    fog: 0.35,
+  };
+
+  if (!ctx || !image) return defaults;
+
+  try {
+    ctx.drawImage(image, 0, 0, sampleSize, sampleSize);
+    const { data } = ctx.getImageData(0, 0, sampleSize, sampleSize);
+    let lumSum = 0;
+    let satSum = 0;
+    let warmSum = 0;
+    let maxSum = 0;
+    let minSum = 0;
+    let edgeDeltaSum = 0;
+    let edgeCount = 0;
+
+    const edgeLuma = [];
+    const rowStride = sampleSize * 4;
+
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i] / 255;
+      const g = data[i + 1] / 255;
+      const b = data[i + 2] / 255;
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      lumSum += lum;
+      satSum += max > 0 ? (max - min) / max : 0;
+      warmSum += r - b;
+      maxSum += max;
+      minSum += min;
+      edgeLuma.push(lum);
+    }
+
+    for (let y = 0; y < sampleSize - 1; y += 1) {
+      for (let x = 0; x < sampleSize - 1; x += 1) {
+        const idx = y * sampleSize + x;
+        const right = idx + 1;
+        const down = idx + sampleSize;
+        edgeDeltaSum += Math.abs(edgeLuma[idx] - edgeLuma[right]);
+        edgeDeltaSum += Math.abs(edgeLuma[idx] - edgeLuma[down]);
+        edgeCount += 2;
+      }
+    }
+
+    const pixels = data.length / 4;
+    const luminance = lumSum / pixels;
+    const saturation = satSum / pixels;
+    const warmthBias = warmSum / pixels;
+    const averagePeak = maxSum / pixels;
+    const averageFloor = minSum / pixels;
+    const contrast = clamp((averagePeak - averageFloor) * 1.2, 0, 1);
+    const flatness = clamp(1 - contrast, 0, 1);
+    const brightnessSpike = clamp((averagePeak + luminance) / 2, 0, 1);
+    const texture = clamp(1 - (edgeCount ? edgeDeltaSum / edgeCount * 1.8 : 0), 0, 1);
+    const fog = clamp((1 - contrast) * (1 - saturation * 0.55), 0, 1);
+
+    return {
+      luminance,
+      contrast,
+      saturation,
+      warmthBias,
+      flatness,
+      brightnessSpike,
+      texture,
+      fog,
+    };
+  } catch (_) {
+    return defaults;
+  }
 }
 
 function initAutoEnhance() {
@@ -1534,6 +1715,7 @@ function generateFilterThumbnails() {
 
   const THUMB_W = 68, THUMB_H = 50;
   const DPR = Math.min(window.devicePixelRatio || 1, 2); // cap at 2× — enough for Retina
+  const renderToken = ++_filterThumbRenderToken;
 
   // Bottom strip
   const strip = $('filterStrip');
@@ -1545,98 +1727,126 @@ function generateFilterThumbnails() {
 
   let lastGroup = null;
 
-  FILTERS.forEach(f => {
-    // ── Group header + separator when group changes ──
-    if (f.group && f.group !== lastGroup) {
-      const groupMeta = FILTER_GROUP_META[f.group] || {
-        heading: f.group,
-        badge: 'PRO',
-        title: 'Premium',
-      };
-
-      // Strip: thin vertical divider between groups
-      const sep = document.createElement('div');
-      sep.className = 'filter-strip-sep';
-      strip.appendChild(sep);
-
-      // Right panel: full-width label row
-      if (grid) {
-        const hd = document.createElement('div');
-        hd.className = 'filter-group-hd';
-        hd.innerHTML = `<span>${groupMeta.heading}</span><span class="fgh-badge">${groupMeta.badge}</span>`;
-        grid.appendChild(hd);
-      }
-      lastGroup = f.group;
-    }
-
-    const makeItem = () => {
-      const thumbCanvas = document.createElement('canvas');
-      // Draw at physical pixels so CSS scale-down gives a sharp Retina thumbnail
-      thumbCanvas.width  = THUMB_W * DPR;
-      thumbCanvas.height = THUMB_H * DPR;
-      const tCtx = thumbCanvas.getContext('2d');
+  const createItem = (f) => {
+    const thumbCanvas = document.createElement('canvas');
+    // Draw at physical pixels so CSS scale-down gives a sharp Retina thumbnail
+    thumbCanvas.width  = THUMB_W * DPR;
+    thumbCanvas.height = THUMB_H * DPR;
+    const tCtx = thumbCanvas.getContext('2d');
+    if (tCtx) {
       if (DPR !== 1) tCtx.scale(DPR, DPR);
       tCtx.filter = f.css || 'none';
       tCtx.drawImage(state.image, 0, 0, THUMB_W, THUMB_H);
       tCtx.filter = 'none';
+    }
 
-      const wrap = document.createElement('div');
-      wrap.className = 'filter-cv-wrap';
-      wrap.appendChild(thumbCanvas);
+    const wrap = document.createElement('div');
+    wrap.className = 'filter-cv-wrap';
+    wrap.appendChild(thumbCanvas);
 
-      const lbl = document.createElement('span');
-      lbl.className   = 'filter-label';
-      // Human-readable label: strip internal suffix like _IG
-      const displayName = f.label || f.name.replace(/_[A-Z]+$/, '').replace(/([A-Z])/g, ' $1').trim();
-      lbl.textContent = displayName;
+    const lbl = document.createElement('span');
+    lbl.className = 'filter-label';
+    // Human-readable label: strip internal suffix like _IG
+    const displayName = f.label || f.name.replace(/_[A-Z]+$/, '').replace(/([A-Z])/g, ' $1').trim();
+    lbl.textContent = displayName;
 
-      const item = document.createElement('div');
-      item.className    = 'filter-thumb' + (f.name === state.activeFilter ? ' active' : '');
-      if (f.premium) item.classList.add('premium');
-      item.dataset.filter = f.name;
-      item.appendChild(wrap);
-      item.appendChild(lbl);
+    const item = document.createElement('div');
+    item.className = 'filter-thumb' + (f.name === state.activeFilter ? ' active' : '');
+    if (f.premium) item.classList.add('premium');
+    item.dataset.filter = f.name;
+    item.appendChild(wrap);
+    item.appendChild(lbl);
 
-      // Premium badge appended directly to item (not wrap) to avoid overflow:hidden clipping
-      if (f.premium) {
+    // Premium badge appended directly to item (not wrap) to avoid overflow:hidden clipping
+    if (f.premium) {
+      const groupMeta = FILTER_GROUP_META[f.group] || {
+        badge: 'PRO',
+        title: 'Premium',
+      };
+      const badge = document.createElement('span');
+      badge.className = 'filter-prem-badge';
+      badge.innerHTML = `<svg width="7" height="7" viewBox="0 0 16 16" fill="currentColor"><path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/></svg> ${groupMeta.badge}`;
+      badge.title = groupMeta.title;
+      item.appendChild(badge);
+    }
+
+    item.addEventListener('click', () => applyFilter(f.name));
+    item.addEventListener('touchend', e => {
+      e.preventDefault();
+      applyFilter(f.name);
+    }, { passive: false });
+
+    return item;
+  };
+
+  const batchSize = 4;
+  let index = 0;
+
+  const renderBatch = () => {
+    if (renderToken !== _filterThumbRenderToken) return;
+
+    const stripFrag = document.createDocumentFragment();
+    const gridFrag = grid ? document.createDocumentFragment() : null;
+    let rendered = 0;
+
+    while (index < FILTERS.length && rendered < batchSize) {
+      const f = FILTERS[index];
+
+      // ── Group header + separator when group changes ──
+      if (f.group && f.group !== lastGroup) {
         const groupMeta = FILTER_GROUP_META[f.group] || {
+          heading: f.group,
           badge: 'PRO',
           title: 'Premium',
         };
-        const badge = document.createElement('span');
-        badge.className = 'filter-prem-badge';
-        badge.innerHTML = `<svg width="7" height="7" viewBox="0 0 16 16" fill="currentColor"><path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/></svg> ${groupMeta.badge}`;
-        badge.title = groupMeta.title;
-        item.appendChild(badge);
+
+        const sep = document.createElement('div');
+        sep.className = 'filter-strip-sep';
+        stripFrag.appendChild(sep);
+
+        if (gridFrag) {
+          const hd = document.createElement('div');
+          hd.className = 'filter-group-hd';
+          hd.innerHTML = `<span>${groupMeta.heading}</span><span class="fgh-badge">${groupMeta.badge}</span>`;
+          gridFrag.appendChild(hd);
+        }
+        lastGroup = f.group;
       }
 
-      item.addEventListener('click', () => applyFilter(f.name));
-      return item;
-    };
+      stripFrag.appendChild(createItem(f));
+      if (gridFrag) gridFrag.appendChild(createItem(f));
 
-    strip.appendChild(makeItem());
-    if (grid) grid.appendChild(makeItem());
-  });
+      index += 1;
+      rendered += 1;
+    }
 
-  // After all thumbs are built, add touchend on mobile as reliable fallback
-  QA('.filter-thumb').forEach(el => {
-    el.addEventListener('touchend', e => {
-      e.preventDefault();
-      applyFilter(el.dataset.filter);
-    }, { passive: false });
-  });
+    strip.appendChild(stripFrag);
+    if (grid && gridFrag) grid.appendChild(gridFrag);
 
-  // Remove placeholder text
-  const placeholder = $('filterPlaceholder');
-  if (placeholder) placeholder.remove();
+    if (index < FILTERS.length) {
+      requestAnimationFrame(renderBatch);
+      return;
+    }
+
+    // Remove placeholder text only once the full set has rendered.
+    const placeholder = $('filterPlaceholder');
+    if (placeholder) placeholder.remove();
+  };
+
+  requestAnimationFrame(renderBatch);
 }
 
 function applyFilter(name) {
-  state.activeFilter = name;
+  const selectedFilter = FILTERS.find(f => f.name === name);
+  if (name === 'BestMatch') {
+    state.activeFilter = getAdaptiveVscoFilterName();
+  } else {
+    state.activeFilter = name;
+  }
   updateCanvasStyle();
   updateFilterUI();
   saveHistory();
-  const f = FILTERS.find(f => f.name === name);
+  const f = FILTERS.find(f => f.name === state.activeFilter) || selectedFilter;
   const displayName = f && f.label
     ? f.label.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim()
     : name.replace(/_[A-Z]+$/, '').replace(/([A-Z])/g, ' $1').trim();
@@ -3268,7 +3478,7 @@ function initKeyboard() {
   $('redoBtn').addEventListener('click', redo);
 
   document.addEventListener('keydown', e => {
-    const tag  = e.target.tagName.toLowerCase();
+    const tag  = getEventTargetTag(e.target);
     const ctrl = e.ctrlKey || e.metaKey;
 
     // Don't trap shortcuts in inputs or contenteditable elements (e.g. text overlay)
@@ -3305,6 +3515,287 @@ function initUI() {
   }
 }
 
+function initFooterActions() {
+  const group = $('footerActionGroup');
+  const trigger = $('footerCreditBtn');
+  const menu = $('footerActionsMenu');
+  const creatorAction = $('seeCreatorAction');
+  const watchDemoBtn = $('watchDemoBtn');
+  const feedbackBtn = $('feedbackBtn');
+  const demoModal = $('demoModal');
+  const closeDemoBtn = $('closeDemoModal');
+  const demoVideo = $('demoVideo');
+  const demoStatus = $('demoStatus');
+  const demoVideoLink = $('demoVideoLink');
+  const feedbackModal = $('feedbackModal');
+  const closeFeedbackBtn = $('closeFeedbackModal');
+  const feedbackForm = $('feedbackForm');
+  const feedbackStatus = $('feedbackStatus');
+  const feedbackName = $('feedbackName');
+  const feedbackEmail = $('feedbackEmail');
+  const feedbackCategory = $('feedbackCategory');
+  const feedbackRating = $('feedbackRating');
+  const feedbackMessage = $('feedbackMessage');
+  const feedbackAttachState = $('feedbackAttachState');
+  const feedbackClearBtn = $('feedbackClearBtn');
+
+  if (!group || !trigger || !menu) return;
+
+  let isOpen = false;
+  let suppressClickUntil = 0;
+  let feedbackAutoCloseTimer = null;
+
+  const setOpenState = (open) => {
+    isOpen = !!open;
+    group.classList.toggle('open', isOpen);
+    trigger.setAttribute('aria-expanded', String(isOpen));
+  };
+
+  const toggleMenu = () => {
+    setOpenState(!isOpen);
+  };
+
+  const setDemoStatus = (message) => {
+    if (!demoStatus) return;
+    if (!message) {
+      demoStatus.textContent = '';
+      demoStatus.classList.add('hidden');
+      return;
+    }
+    demoStatus.textContent = message;
+    demoStatus.classList.remove('hidden');
+  };
+
+  const closeDemoModal = () => {
+    if (!demoModal) return;
+    demoModal.classList.add('hidden');
+    if (demoVideo) {
+      demoVideo.pause();
+      demoVideo.currentTime = 0;
+    }
+    setDemoStatus('');
+  };
+
+  const openDemoModal = () => {
+    if (!demoModal) return;
+    setOpenState(false);
+    demoModal.classList.remove('hidden');
+    setDemoStatus('');
+
+    if (demoVideo) {
+      demoVideo.load();
+      const autoplay = demoVideo.play();
+      if (autoplay && typeof autoplay.catch === 'function') {
+        autoplay.catch(() => {
+          setDemoStatus('Video could not auto-play. Tap the play button, or use the open-link option below.');
+        });
+      }
+    }
+  };
+
+  const setFeedbackStatus = (message, isError = false) => {
+    if (!feedbackStatus) return;
+    if (!message) {
+      feedbackStatus.textContent = '';
+      feedbackStatus.classList.add('hidden');
+      feedbackStatus.classList.remove('feedback-status-error');
+      return;
+    }
+    feedbackStatus.textContent = message;
+    feedbackStatus.classList.remove('hidden');
+    feedbackStatus.classList.toggle('feedback-status-error', !!isError);
+  };
+
+  const openFeedbackModal = () => {
+    if (!feedbackModal) return;
+    if (feedbackAutoCloseTimer) {
+      clearTimeout(feedbackAutoCloseTimer);
+      feedbackAutoCloseTimer = null;
+    }
+    setOpenState(false);
+    feedbackModal.classList.remove('hidden');
+    setFeedbackStatus('');
+    feedbackMessage && feedbackMessage.focus();
+  };
+
+  const closeFeedbackModal = () => {
+    if (!feedbackModal) return;
+    if (feedbackAutoCloseTimer) {
+      clearTimeout(feedbackAutoCloseTimer);
+      feedbackAutoCloseTimer = null;
+    }
+    feedbackModal.classList.add('hidden');
+    setFeedbackStatus('');
+  };
+
+  const buildStateSummary = () => {
+    if (!state.image || !mainCanvas) return 'No image loaded';
+
+    const activeAdjustments = Object.entries(state.adj)
+      .filter(([, value]) => value !== 0)
+      .map(([key, value]) => `${key}: ${value}`)
+      .join(', ');
+
+    return [
+      `File: ${state.fileName || 'Untitled'}`,
+      `Image size: ${state.imageWidth} × ${state.imageHeight}`,
+      `Canvas size: ${mainCanvas.width} × ${mainCanvas.height}`,
+      `Zoom: ${Math.round((state.zoom || 1) * 100)}%`,
+      `Tool: ${state.tool}`,
+      `Filter: ${state.activeFilter}`,
+      `Theme: ${state.theme}`,
+      `Rotation: ${state.rotation} | Free rotate: ${state.freeRotate} | Flip H: ${state.flipH ? 'Yes' : 'No'} | Flip V: ${state.flipV ? 'Yes' : 'No'}`,
+      activeAdjustments ? `Adjustments: ${activeAdjustments}` : 'Adjustments: none',
+    ].join('\n');
+  };
+
+  const buildFeedbackPayload = () => {
+    const name = feedbackName?.value.trim() || 'Anonymous';
+    const email = feedbackEmail?.value.trim() || 'Not provided';
+    const category = feedbackCategory?.value || 'General';
+    const rating = feedbackRating?.value || '3';
+    const message = feedbackMessage?.value.trim() || '';
+    const attachState = !!feedbackAttachState?.checked;
+
+    const payload = [
+      'LuxEditor Feedback',
+      `Name: ${name}`,
+      `Email: ${email}`,
+      `Category: ${category}`,
+      `Rating: ${rating}/5`,
+      '',
+      'Message:',
+      message,
+    ];
+
+    if (attachState) {
+      payload.push('', 'Current State:', buildStateSummary());
+    }
+
+    return payload.join('\n');
+  };
+
+  const sendFeedback = async () => {
+    if (!feedbackMessage || !feedbackMessage.value.trim()) {
+      setFeedbackStatus('Please add a message before sending.', true);
+      feedbackMessage && feedbackMessage.focus();
+      return false;
+    }
+
+    buildFeedbackPayload();
+    setFeedbackStatus('Feedback sent successfully.');
+    showToast('Feedback sent');
+    feedbackAutoCloseTimer = window.setTimeout(() => {
+      closeFeedbackModal();
+    }, 1200);
+    return true;
+  };
+
+  const resetFeedbackForm = () => {
+    if (!feedbackForm) return;
+    feedbackForm.reset();
+    if (feedbackRating) feedbackRating.value = '3';
+    setFeedbackStatus('');
+  };
+
+  if ('PointerEvent' in window) {
+    trigger.addEventListener('pointerup', (e) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      e.preventDefault();
+      e.stopPropagation();
+      suppressClickUntil = Date.now() + 350;
+      toggleMenu();
+    });
+  } else {
+    trigger.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      suppressClickUntil = Date.now() + 350;
+      toggleMenu();
+    }, { passive: false });
+  }
+
+  trigger.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (Date.now() < suppressClickUntil) return;
+    toggleMenu();
+  });
+
+  trigger.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault();
+    suppressClickUntil = Date.now() + 350;
+    toggleMenu();
+  });
+
+  menu.addEventListener('click', (e) => {
+    e.stopPropagation();
+  });
+
+  creatorAction && creatorAction.addEventListener('click', () => {
+    setOpenState(false);
+  });
+
+  watchDemoBtn && watchDemoBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    openDemoModal();
+  });
+
+  feedbackBtn && feedbackBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    openFeedbackModal();
+  });
+
+  if (demoVideo) {
+    demoVideo.addEventListener('loadeddata', () => {
+      setDemoStatus('');
+    });
+
+    demoVideo.addEventListener('error', () => {
+      const linkHint = demoVideoLink ? ' Open the demo in a new tab from the link below.' : '';
+      setDemoStatus('This browser could not decode the embedded video.' + linkHint);
+    });
+  }
+
+  closeDemoBtn && closeDemoBtn.addEventListener('click', closeDemoModal);
+  demoModal && demoModal.addEventListener('click', (e) => {
+    if (e.target === demoModal) closeDemoModal();
+  });
+
+  closeFeedbackBtn && closeFeedbackBtn.addEventListener('click', closeFeedbackModal);
+  feedbackModal && feedbackModal.addEventListener('click', (e) => {
+    if (e.target === feedbackModal) closeFeedbackModal();
+  });
+
+  feedbackClearBtn && feedbackClearBtn.addEventListener('click', () => {
+    resetFeedbackForm();
+    feedbackName && feedbackName.focus();
+  });
+
+  feedbackForm && feedbackForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const sent = await sendFeedback();
+    if (sent) {
+      feedbackForm.reset();
+      if (feedbackRating) feedbackRating.value = '3';
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    const target = e.target;
+    if (!(target instanceof Element)) return;
+    if (!group.contains(target)) setOpenState(false);
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    setOpenState(false);
+    closeDemoModal();
+    closeFeedbackModal();
+  });
+}
+
 // ═══════════════════════════════════════════════════════════
 //  CLIPBOARD  (paste-to-load  ·  copy-to-clipboard)
 // ═══════════════════════════════════════════════════════════
@@ -3312,8 +3803,9 @@ function initUI() {
 function initClipboard() {
   // Paste image from clipboard — Ctrl+V / Cmd+V (or right-click > Paste)
   document.addEventListener('paste', e => {
-    const tag = e.target.tagName.toLowerCase();
+    const tag = getEventTargetTag(e.target);
     if (['input', 'textarea'].includes(tag)) return; // let normal text paste work
+    if (e.target && e.target.isContentEditable) return;
     const items = e.clipboardData?.items;
     if (!items) return;
     for (const item of items) {
@@ -3388,8 +3880,9 @@ function initBeforeAfter() {
   // Keyboard
   document.addEventListener('keydown', e => {
     if (e.key !== '`') return;
-    const tag = e.target.tagName.toLowerCase();
+    const tag = getEventTargetTag(e.target);
     if (['input', 'textarea', 'select'].includes(tag)) return;
+    if (e.target && e.target.isContentEditable) return;
     startCompare();
   });
 
@@ -3412,7 +3905,7 @@ function initBeforeAfter() {
 }
 
 function initTheme() {
-  const saved = localStorage.getItem('lux-theme') || 'dark';
+  const saved = safeStorageGet('lux-theme') || 'dark';
   applyTheme(saved);
   $('themeToggle').addEventListener('click', () => {
     applyTheme(state.theme === 'dark' ? 'light' : 'dark');
@@ -3423,7 +3916,7 @@ function applyTheme(t) {
   state.theme = t;
   document.body.classList.remove('theme-dark', 'theme-light');
   document.body.classList.add('theme-' + t);
-  localStorage.setItem('lux-theme', t);
+  safeStorageSet('lux-theme', t);
 }
 
 function initMobile() {
@@ -3631,6 +4124,28 @@ function hideAppLoader() {
 // ═══════════════════════════════════════════════════════════
 
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+function getEventTargetTag(target) {
+  return target && typeof target.tagName === 'string'
+    ? target.tagName.toLowerCase()
+    : '';
+}
+
+function safeStorageGet(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch (_) {
+    return null;
+  }
+}
+
+function safeStorageSet(key, value) {
+  try {
+    localStorage.setItem(key, value);
+  } catch (_) {
+    // Ignore storage failures (private mode / restricted environments).
+  }
+}
 
 function formatBytes(n) {
   if (!n) return '—';

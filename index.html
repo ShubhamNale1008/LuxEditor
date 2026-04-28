@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' blob: data:; connect-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; form-action 'none'; base-uri 'self'; manifest-src 'self'"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' blob: data:; media-src 'self' blob: data:; connect-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; form-action 'none'; base-uri 'self'; manifest-src 'self'"/>
   <meta name="referrer" content="no-referrer"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes"/>
   <meta name="mobile-web-app-capable" content="yes"/>
@@ -45,11 +45,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&family=JetBrains+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Favicon (inline SVG) -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d0d0f'/%3E%3Ctext x='32' y='46' text-anchor='middle' font-family='Georgia,serif' font-size='38' fill='%23f5a623'%3E%E2%9C%A6%3C/text%3E%3C/svg%3E"/>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%23fffdf9'/%3E%3Cstop offset='52%25' stop-color='%23faf6ef'/%3E%3Cstop offset='100%25' stop-color='%23f2ece2'/%3E%3C/linearGradient%3E%3ClinearGradient id='gold' x1='0.16' y1='0.1' x2='0.84' y2='0.9'%3E%3Cstop offset='0%25' stop-color='%23fff1c8'/%3E%3Cstop offset='24%25' stop-color='%23ffd978'/%3E%3Cstop offset='58%25' stop-color='%23f5b13a'/%3E%3Cstop offset='100%25' stop-color='%23af6f10'/%3E%3C/linearGradient%3E%3CradialGradient id='glow' cx='0.5' cy='0.46' r='0.54'%3E%3Cstop offset='0%25' stop-color='%23f5a623' stop-opacity='0.24'/%3E%3Cstop offset='62%25' stop-color='%23f5a623' stop-opacity='0.08'/%3E%3Cstop offset='100%25' stop-color='%23f5a623' stop-opacity='0'/%3E%3C/radialGradient%3E%3ClinearGradient id='ring' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='rgba(255,255,255,0.95)'/%3E%3Cstop offset='100%25' stop-color='rgba(180,140,70,0.42)'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23bg)'/%3E%3Crect x='3.5' y='3.5' width='57' height='57' rx='12.5' fill='none' stroke='%23dbcbb2' stroke-opacity='0.65'/%3E%3Crect x='6.5' y='6.5' width='51' height='51' rx='10.5' fill='none' stroke='%23ffffff' stroke-opacity='0.85'/%3E%3Ccircle cx='32' cy='32' r='23.5' fill='url(%23glow)'/%3E%3Cpath d='M32 12.5 35.9 28.1 51.5 32 35.9 35.9 32 51.5 28.1 35.9 12.5 32 28.1 28.1Z' fill='url(%23gold)'/%3E%3Cpath d='M47.2 13.8 48.7 19.3 54.2 20.8 48.7 22.3 47.2 27.8 45.7 22.3 40.2 20.8 45.7 19.3Z' fill='url(%23gold)' opacity='0.96'/%3E%3Ccircle cx='32' cy='32' r='2.4' fill='%23fff7e6'/%3E%3C/svg%3E"/>
 
   <link rel="canonical" href="https://luxeditor.vercel.app/"/>
   <title>LuxEditor | Premium Online Photo Editor</title>
-  <link rel="stylesheet" href="styles.css?v=20260407-25"/>
+  <link rel="stylesheet" href="styles.css?v=20260407-30"/>
 </head>
 <body class="theme-dark">
 
@@ -68,8 +68,10 @@
 </div>
 
 <div id="loadingOverlay" class="loading-overlay hidden">
-  <div class="loader-ring"></div>
-  <p class="loader-text">Processing…</p>
+  <div class="loading-overlay-inner" aria-live="polite" aria-label="LuxEditor loading">
+    <span class="loading-logo-mark" aria-hidden="true">✦</span>
+    <span class="sr-only">LuxEditor loading</span>
+  </div>
 </div>
 
 <div id="toastContainer" class="toast-container"></div>
@@ -128,7 +130,7 @@
       <svg viewBox="0 0 16 16"><path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/><path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.892 3.433-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.892-1.64-.901-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z"/></svg>
     </button>
     <button class="export-btn" id="exportBtn">
-      <svg viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5zm7.5.5a.5.5 0 0 1-.5-.5v-8a.5.5 0 0 1 1 0v8a.5.5 0 0 1-.5.5z"/><path d="M4.354 10.854a.5.5 0 0 1-.708-.708l4-4a.5.5 0 0 1 .708 0l4 4a.5.5 0 0 1-.708.708L8 7.207l-3.646 3.647z"/></svg>
+      <svg viewBox="0 0 16 16"><path d="M8 1.5a.5.5 0 0 1 .5.5v6.293l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 8.293V2a.5.5 0 0 1 .5-.5z"/><path d="M2 10.5a1.5 1.5 0 0 0-1.5 1.5v.5A2.5 2.5 0 0 0 3 15h10a2.5 2.5 0 0 0 2.5-2.5V12a1.5 1.5 0 0 0-1.5-1.5h-2.2a.5.5 0 0 0-.447.276l-.382.764A.5.5 0 0 1 10.524 12h-5.05a.5.5 0 0 1-.447-.276l-.382-.764A.5.5 0 0 0 4.2 10.5H2z"/></svg>
       <span class="export-label">Export</span>
     </button>
   </div>
@@ -445,14 +447,14 @@
 
     <div class="tab-pane" id="adjustTab">
 
-      <!-- Auto Enhance -->
+      <!-- AI Enhance -->
       <div class="auto-enhance-row">
-        <button class="btn-auto-enhance" id="autoEnhanceBtn" title="Auto Enhance — applies VSCO-style smart adjustments">
+        <button class="btn-auto-enhance" id="autoEnhanceBtn" title="AI Enhance — applies smart adjustments">
           <svg class="ae-icon" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
             <path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.75.75 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25z"/>
           </svg>
-          <span>Auto Enhance</span>
-          <span class="ae-tag">VSCO</span>
+          <span>AI Enhance</span>
+          <span class="ae-tag">AI</span>
         </button>
       </div>
 
@@ -537,7 +539,36 @@
   <span class="s-dot desk-only">·</span>
   <span id="statusColor" class="desk-only">—</span>
   <span class="stat-spacer"></span>
-  <a class="stat-credit" href="https://shubhamnale.vercel.app/" target="_blank" rel="noopener noreferrer" aria-label="Visit Shubham Nale website">Made with ❤️ </a>
+  <!-- Footer Action Group: "Made with Love" dropdown & watch demo -->
+  <div class="footer-action-group" id="footerActionGroup">
+    
+    <!-- Trigger Button that toggles the menu below -->
+    <button class="stat-credit stat-credit-trigger" id="footerCreditBtn" type="button" aria-expanded="false" aria-haspopup="true" aria-controls="footerActionsMenu">
+      Made with ❤️
+    </button>
+    
+    <!-- The Dropdown/Popup Menu -->
+    <div class="footer-actions-menu" id="footerActionsMenu" role="menu" aria-label="Footer quick actions">
+      
+      <!-- Option 1: See Creator (Opens external link) -->
+      <a id="seeCreatorAction" class="footer-action-item" href="https://shubhamnale.vercel.app/" target="_blank" rel="noopener noreferrer" role="menuitem" aria-label="See creator profile">
+        <span>See Creator</span>
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10.5 1a.5.5 0 0 0 0 1h2.793L8.146 7.146a.5.5 0 1 0 .708.708L14 2.707V5.5a.5.5 0 0 0 1 0v-4A.5.5 0 0 0 14.5 1h-4z"/><path d="M13 8.5a.5.5 0 0 0-1 0v5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h5a.5.5 0 0 0 0-1h-5A1.5 1.5 0 0 0 1 4.5v9A1.5 1.5 0 0 0 2.5 15h9a1.5 1.5 0 0 0 1.5-1.5v-5z"/></svg>
+      </a>
+      
+      <!-- Option 2: Watch Demo (Opens the video modal popup) -->
+      <button id="watchDemoBtn" class="footer-action-item footer-action-btn" type="button" role="menuitem" aria-label="Watch website demo">
+        <span>Watch Demo</span>
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.79 3.093A.5.5 0 0 0 6 3.5v9a.5.5 0 0 0 .79.407l6-4.5a.5.5 0 0 0 0-.814l-6-4.5z"/><path d="M0 4.5A2.5 2.5 0 0 1 2.5 2h11A2.5 2.5 0 0 1 16 4.5v7a2.5 2.5 0 0 1-2.5 2h-11A2.5 2.5 0 0 1 0 11.5v-7zm2.5-1A1.5 1.5 0 0 0 1 5v6a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 15 11V5a1.5 1.5 0 0 0-1.5-1.5h-11z"/></svg>
+      </button>
+
+      <button id="feedbackBtn" class="footer-action-item footer-action-btn" type="button" role="menuitem" aria-label="Open feedback form">
+        <span>Send Feedback</span>
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 2A1.5 1.5 0 0 0 0 3.5v7A1.5 1.5 0 0 0 1.5 12H3v2.25a.25.25 0 0 0 .4.2L6.5 12H14.5a1.5 1.5 0 0 0 1.5-1.5v-7A1.5 1.5 0 0 0 14.5 2h-13zM4 5.25A.75.75 0 1 1 4 6.75h8a.75.75 0 0 1 0-1.5H4zm0 3A.75.75 0 1 1 4 9.75h5a.75.75 0 0 1 0-1.5H4z"/></svg>
+      </button>
+
+    </div>
+  </div>
 </div>
 
 <!-- EXPORT MODAL -->
@@ -579,6 +610,106 @@
   </div>
 </div>
 
+<!-- DEMO MODAL: Pops up when 'Watch Demo' is clicked from footer -->
+<div class="modal-bg demo-modal-bg hidden" id="demoModal">
+  <!-- The main container/box of the demo modal -->
+  <div class="modal-box demo-modal-box">
+    
+    <!-- Modal Header with Title and Close Button -->
+    <div class="modal-top">
+      <h2 class="modal-title">Website Demo</h2>
+      <button class="modal-close" id="closeDemoModal" aria-label="Close demo">✕</button>
+    </div>
+    
+    <!-- Modal Content: Video Player and Fallback Links -->
+    <div class="modal-body demo-modal-body">
+      <p class="demo-note">Quick walkthrough of LuxEditor features.</p>
+      
+      <!-- Video Element: Looks for Timeline 1 video in Tutorial folder -->
+      <video id="demoVideo" class="demo-video" controls preload="metadata" playsinline>
+        <source src="Tutorial/Timeline%201.mp4" type="video/mp4"/>
+        <source src="Tutorial/Timeline%201.mov" type="video/quicktime"/>
+        Your browser cannot play the embedded video. Use the link below to open the file.
+      </video>
+      
+      <!-- Hidden status text used to show playback errors (if any) -->
+      <p id="demoStatus" class="demo-status hidden" aria-live="polite"></p>
+      
+      <!-- Fallback link in case the browser refuses to play the video inline -->
+      <a id="demoVideoLink" class="demo-video-link" href="Tutorial/Timeline%201.mp4" target="_blank" rel="noopener noreferrer">Open demo video in a new tab</a>
+    </div>
+    
+  </div>
+</div>
+
+<!-- FEEDBACK MODAL -->
+<div class="modal-bg feedback-modal-bg hidden" id="feedbackModal">
+  <div class="modal-box feedback-modal-box">
+    <div class="modal-top">
+      <h2 class="modal-title">Send Feedback</h2>
+      <button class="modal-close" id="closeFeedbackModal" aria-label="Close feedback form">✕</button>
+    </div>
+
+    <form class="modal-body feedback-modal-body" id="feedbackForm">
+      <p class="feedback-note">Share what feels good, what is missing, or what broke. This works offline and shows a sent confirmation after submit.</p>
+
+      <div class="feedback-grid">
+        <label class="feedback-field">
+          <span class="field-lbl">Name</span>
+          <input class="t-input feedback-input" id="feedbackName" name="name" type="text" placeholder="Your name" maxlength="60" autocomplete="name" />
+        </label>
+
+        <label class="feedback-field">
+          <span class="field-lbl">Email</span>
+          <input class="t-input feedback-input" id="feedbackEmail" name="email" type="email" placeholder="name@example.com" maxlength="120" autocomplete="email" />
+        </label>
+      </div>
+
+      <label class="feedback-field">
+        <span class="field-lbl">Category</span>
+        <select class="s-input feedback-input" id="feedbackCategory" name="category">
+          <option value="General">General</option>
+          <option value="Bug report">Bug report</option>
+          <option value="Feature request">Feature request</option>
+          <option value="UI / Design">UI / Design</option>
+          <option value="Performance">Performance</option>
+        </select>
+      </label>
+
+      <label class="feedback-field">
+        <span class="field-lbl">Rating</span>
+        <select class="s-input feedback-input" id="feedbackRating" name="rating">
+          <option value="5">5 - Love it</option>
+          <option value="4">4 - Very good</option>
+          <option value="3" selected>3 - Okay</option>
+          <option value="2">2 - Needs work</option>
+          <option value="1">1 - Frustrating</option>
+        </select>
+      </label>
+
+      <label class="feedback-field">
+        <span class="field-lbl">Feedback</span>
+        <textarea class="t-input feedback-textarea" id="feedbackMessage" name="message" rows="6" maxlength="1200" placeholder="Tell us what happened and what you expected."></textarea>
+      </label>
+
+      <label class="feedback-attach-row" for="feedbackAttachState">
+        <input type="checkbox" id="feedbackAttachState" />
+        <span>
+          <strong>Attach current state</strong>
+          <small>Includes image, tool, filter, zoom, and adjustment summary.</small>
+        </span>
+      </label>
+
+      <p id="feedbackStatus" class="feedback-status hidden" aria-live="polite"></p>
+
+      <div class="feedback-actions">
+        <button class="btn-ghost feedback-secondary" id="feedbackClearBtn" type="button">Clear</button>
+        <button class="btn-export-modal feedback-submit" id="feedbackSubmitBtn" type="submit">Send</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 
 
 <!-- MOBILE LIVE PREVIEW -->
@@ -595,6 +726,6 @@
   </defs>
 </svg>
 
-<script src="app.js?v=20260305-24"></script>
+<script src="app.js?v=20260305-27"></script>
 </body>
 </html>
