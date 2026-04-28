@@ -49,7 +49,7 @@
 
   <link rel="canonical" href="https://luxeditor.vercel.app/"/>
   <title>LuxEditor | Premium Online Photo Editor</title>
-  <link rel="stylesheet" href="styles.css?v=20260407-30"/>
+  <link rel="stylesheet" href="styles.css?v=20260428-36"/>
 </head>
 <body class="theme-dark">
 
@@ -626,11 +626,13 @@
       <p class="demo-note">Quick walkthrough of LuxEditor features.</p>
       
       <!-- Video Element: Looks for Timeline 1 video in Tutorial folder -->
-      <video id="demoVideo" class="demo-video" controls preload="metadata" playsinline>
-        <source src="Tutorial/Timeline%201.mp4" type="video/mp4"/>
-        <source src="Tutorial/Timeline%201.mov" type="video/quicktime"/>
-        Your browser cannot play the embedded video. Use the link below to open the file.
-      </video>
+      <div class="demo-video-frame">
+        <video id="demoVideo" class="demo-video" controls preload="metadata" playsinline>
+          <source src="Tutorial/Timeline%201.mp4" type="video/mp4"/>
+          <source src="Tutorial/Timeline%201.mov" type="video/quicktime"/>
+          Your browser cannot play the embedded video. Use the link below to open the file.
+        </video>
+      </div>
       
       <!-- Hidden status text used to show playback errors (if any) -->
       <p id="demoStatus" class="demo-status hidden" aria-live="polite"></p>
@@ -726,6 +728,6 @@
   </defs>
 </svg>
 
-<script src="app.js?v=20260305-27"></script>
+<script src="app.js?v=20260428-29"></script>
 </body>
 </html>

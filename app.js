@@ -3543,6 +3543,7 @@ function initFooterActions() {
 
   let isOpen = false;
   let suppressClickUntil = 0;
+  let suppressActionUntil = 0;
   let feedbackAutoCloseTimer = null;
 
   const setOpenState = (open) => {
@@ -3552,6 +3553,7 @@ function initFooterActions() {
   };
 
   const toggleMenu = () => {
+    if (!isOpen) suppressActionUntil = Date.now() + 420;
     setOpenState(!isOpen);
   };
 
@@ -3583,7 +3585,11 @@ function initFooterActions() {
     setDemoStatus('');
 
     if (demoVideo) {
-      demoVideo.load();
+      if (demoVideo.readyState === 0) {
+        demoVideo.load();
+      } else {
+        try { demoVideo.currentTime = 0; } catch (_) {}
+      }
       const autoplay = demoVideo.play();
       if (autoplay && typeof autoplay.catch === 'function') {
         autoplay.catch(() => {
@@ -3737,12 +3743,21 @@ function initFooterActions() {
     setOpenState(false);
   });
 
+  const shouldIgnoreFreshMenuTap = (e) => {
+    if (Date.now() >= suppressActionUntil) return false;
+    e.preventDefault();
+    e.stopPropagation();
+    return true;
+  };
+
   watchDemoBtn && watchDemoBtn.addEventListener('click', (e) => {
+    if (shouldIgnoreFreshMenuTap(e)) return;
     e.preventDefault();
     openDemoModal();
   });
 
   feedbackBtn && feedbackBtn.addEventListener('click', (e) => {
+    if (shouldIgnoreFreshMenuTap(e)) return;
     e.preventDefault();
     openFeedbackModal();
   });
